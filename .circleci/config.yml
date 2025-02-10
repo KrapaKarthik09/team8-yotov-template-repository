@@ -30,3 +30,9 @@ jobs:
       - store_artifacts:
           path: test-results
           destination: test-results
+
+workflows:
+  version: 2
+  test_and_validate:
+    jobs:
+      - test
