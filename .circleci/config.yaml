@@ -1,0 +1,32 @@
+version: 2.1
+
+jobs:
+  test:
+    docker:
+      - image: circleci/python:3.13
+    steps:
+      - checkout
+      - run:
+          name: Install Dependencies
+          command: |
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+            uv sync
+      - run:
+          name: Run Linter
+          command: uv run ruff check .
+      - run:
+          name: Run Type Checker
+          command: uv run mypy .
+      - run:
+          name: Run Tests
+          command: uv run pytest --junitxml=test-results/results.xml --cov=.
+      - run:
+          name: Upload Coverage
+          command: uv run coverage xml
+
+      # Store test results to display in CircleCI UI
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
+          destination: test-results
