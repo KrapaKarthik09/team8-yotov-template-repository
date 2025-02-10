@@ -22,7 +22,7 @@ jobs:
       #     command: uv run mypy .
       - run:
           name: Run Tests
-          command: uv run pytest --junitxml=test-results/results.xml --cov=.
+          command: uv run pytest --junitxml=test-results/results.xml --cov=src
       - run:
           name: Upload Coverage
           command: uv run coverage xml
