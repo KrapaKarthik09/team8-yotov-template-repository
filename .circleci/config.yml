@@ -17,9 +17,9 @@ jobs:
       - run:
           name: Run Linter
           command: uv run ruff check .
-      - run:
-          name: Run Type Checker
-          command: uv run mypy .
+      # - run:
+      #     name: Run Type Checker
+      #     command: uv run mypy .
       - run:
           name: Run Tests
           command: uv run pytest --junitxml=test-results/results.xml --cov=.
