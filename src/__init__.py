@@ -1,4 +1,1 @@
-# src/__init__.py
-"""
-Root package for the project.
-"""
+"""Root package for the project."""
