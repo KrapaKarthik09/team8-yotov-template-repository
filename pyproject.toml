@@ -1,9 +1,9 @@
 [project]
 name = "team8-yotov-template-repository"
 version = "0.1.0"
-description = "Add your description here"
+description = "Template repository for Python projects with CI/CD, linting, testing, and coverage."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11"  # Use a stable Python version
 dependencies = [
     "coverage>=7.6.11",
     "mypy>=1.15.0",
@@ -15,6 +15,14 @@ dependencies = [
 
 [tool.ruff]
 line-length = 88
-select = ["E", "F", "W"]
-ignore = ["E501"]
 
+[tool.ruff.lint]
+select = [
+    "E",  # Error codes (PEP 8)
+    "F",  # Pyflakes
+    "W",  # Warnings (PEP 8)
+    "D",  # Documentation checks
+    "ANN",  # Type annotation checks
+    "PLR",  # Refactoring checks
+]
+ignore = ["E501", "S101"]  # Ignore line length and `assert` warnings

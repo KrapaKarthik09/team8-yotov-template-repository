@@ -31,3 +31,9 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+
+echo "__pycache__/" >> .gitignore
+echo "*.pyc" >> .gitignore
+echo ".pytest_cache/" >> .gitignore
+echo "htmlcov/" >> .gitignore
+echo ".coverage" >> .gitignore
