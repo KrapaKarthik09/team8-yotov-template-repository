@@ -63,4 +63,18 @@ This project demonstrates how to organize a Python codebase with modular compone
    ```bash
    uv pip install -e .
 
+# Usage
+
+To use the components in this project, import them into your Python scripts:
+
+```python
+from src.components.calculator import Calculator
+from src.components.logger import Logger
+from src.components.notifier import Notifier
+
+# Example usage
+calc = Calculator()
+result = calc.add(2, 3)
+print(f"Result: {result}")
+
    
