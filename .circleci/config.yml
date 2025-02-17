@@ -40,11 +40,11 @@ jobs:
           command: uv run coverage html  # Generate an HTML report
 
       # Store test results to display in CircleCI UI
-      # - store_test_results:
-      #     path: test-results
+      - store_test_results:
+          path: test-results
       - store_artifacts:
-          path: coverage_html_report  # Correct path format
-          destination: htmlcov_reports  
+          path: test-results
+          destination: test-results
           
 workflows:
   version: 2
