@@ -77,4 +77,10 @@ calc = Calculator()
 result = calc.add(2, 3)
 print(f"Result: {result}")
 
+# Testing
+
+Run the test suite to ensure everything works as expected:
+
+```bash
+uv run pytest tests/
    
