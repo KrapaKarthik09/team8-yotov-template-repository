@@ -14,3 +14,9 @@ class Calculator:
     def multiply(self, a: float, b: float) -> float:
         """Multiply two numbers."""
         return a * b
+
+    def divide(self, a: float, b: float) -> float:
+        """Divide two numbers."""
+        if b == 0:
+            raise ValueError("Cannot divide by zero")
+        return a / b
