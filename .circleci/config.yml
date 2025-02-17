@@ -30,6 +30,18 @@ jobs:
       - run:
           name: Upload Coverage
           command: uv run coverage xml
+      
+      - run:
+          name: Run tests with coverage
+          command: uv run coverage run -m pytest src/tests/
+      
+      - run:
+          name: Generate coverage report
+          command: uv run coverage report  # Generate a coverage report in the console
+          
+      - run:
+          name: Generate coverage HTML report
+          command: uv run coverage html  # Generate an HTML report (optional)
 
       # Store test results to display in CircleCI UI
       - store_test_results:
