@@ -32,10 +32,6 @@ jobs:
           command: uv run coverage xml
       
       - run:
-          name: Run tests with coverage
-          command: uv run coverage run -m pytest src/tests/
-      
-      - run:
           name: Generate coverage report
           command: uv run coverage report  # Generate a coverage report in the console
           
