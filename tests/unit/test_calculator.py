@@ -1,6 +1,6 @@
 """Unit tests for the Calculator component."""
 
-from src.calculator.calculator import Calculator
+from src.components.calculator.calculator import Calculator
 
 # Constants
 EXPECTED_ADD_RESULT = 5

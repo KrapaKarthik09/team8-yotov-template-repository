@@ -1,6 +1,6 @@
 """End-to-end test for Calculator, Logger, and Notifier integration."""
 
-from src.components.calculator import Calculator
+from src.components.calculator.calculator import Calculator
 from src.components.logger import Logger
 from src.components.notifier import Notifier
 

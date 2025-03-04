@@ -1,6 +1,6 @@
 """Integration tests for Calculator and Logger components."""
 
-from src.components.calculator import Calculator
+from src.components.calculator.calculator import Calculator
 from src.components.logger import Logger
 
 
