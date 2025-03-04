@@ -14,9 +14,9 @@ dependencies = [
 ]
 
 [tool.ruff]
+# Core configuration
 line-length = 88
-
-[tool.ruff.lint]
+# Rule selection
 select = [
     "E",  # Error codes (PEP 8)
     "F",  # Pyflakes
@@ -25,4 +25,15 @@ select = [
     "ANN",  # Type annotation checks
     "PLR",  # Refactoring checks
 ]
-ignore = ["E501", "S101"]  # Ignore line length and `assert` warnings
+# Ignore Rules
+# - E501: Line length (handled by formatter)
+# - S101: Assert check (test suites need asserts)
+# - D203/D213: Conflicting docstring blank line rules
+# - ANN101: Self type annotation (redundant in type-checked code)
+ignore = ["E501", "S101", "D203", "D213", "ANN101"]
+
+# Docstring Configuration
+pydocstyle.convention = "pep257"  # Use PEP257 docstring standard
+
+# Type Checking Compatibility
+flake8-annotations.suppress-none-returning = true  # Allow None returns

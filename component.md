@@ -22,7 +22,7 @@ A component in this project represents a modular, reusable piece of functionalit
      calc = Calculator()
      result = calc.add(2, 3)  # Result: 5
      ```
-   - Location: `src/components/calculator.py`
+   - Location: `src/components/calculator/calculator.py`
 
 2. **Logger**:
    - Purpose: Logs operations performed by other components.
@@ -55,8 +55,10 @@ A component in this project represents a modular, reusable piece of functionalit
   - src/ *(Source code directory)*
     - init.py *(Root package initialization)*
     - components/ *(Directory for all components)*
+      - calculator/ *(Calculator component)*
+        - init.py
+        - calculator.py 
       - init.py *(Package initialization for components)*
-      - calculator.py *(Calculator component)*
       - logger.py *(Logger component)*
       - notifier.py *(Notifier component)*
   - tests/ *(Directory for all tests)*
