@@ -1,8 +1,8 @@
 """Integration tests between Logger and Notifier components."""
 
 
-from logger import Logger
-from notifier import Notifier, NotificationType
+from logger.src.logger import Logger
+from notifier.src.notifier import Notifier, NotificationType
 
 class LogMonitoringChannel:
     """Notification channel that monitors logs and sends alerts."""

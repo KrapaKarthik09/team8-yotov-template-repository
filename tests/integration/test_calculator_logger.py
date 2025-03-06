@@ -1,7 +1,7 @@
 """Integration tests between Calculator and Logger components."""
 
-from calculator import Calculator
-from logger import Logger
+from calculator.src.calculator import Calculator
+from logger.src.logger import Logger
 
 
 def test_calculator_with_logger() -> None:

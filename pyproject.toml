@@ -27,7 +27,7 @@ dev = [
 [tool.ruff]
 line-length = 88
 select = ["E", "F", "W", "D", "ANN", "PLR"]
-ignore = ["E501", "S101", "PLR2004","ANN101"] 
+ignore = ["E501", "S101", "PLR2004","ANN101","D407","D406"] 
 
 [tool.mypy]
 python_version = "3.11"
