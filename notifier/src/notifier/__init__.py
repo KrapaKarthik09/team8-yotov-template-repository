@@ -1,7 +1,7 @@
 """Notifier module."""
 
 from .notifier import (
-    Notifier, 
+    Notifier,
     NotificationType,
     NotificationChannel,
     ConsoleChannel,

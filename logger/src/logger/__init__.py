@@ -2,4 +2,4 @@
 
 from .logger import Logger, LogEntry
 
-__all__ = ["Logger", "LogEntry"]    
+__all__ = ["Logger", "LogEntry"]

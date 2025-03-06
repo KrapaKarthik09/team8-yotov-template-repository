@@ -1,9 +1,8 @@
 """Notifier module for sending alerts when values exceed thresholds."""
 
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Any, Dict, List, Optional, Protocol, Union, runtime_checkable
+from typing import Dict, List, Optional, Protocol, Union, runtime_checkable
 
 
 class NotificationType(Enum):
@@ -28,6 +27,7 @@ class NotificationChannel(Protocol):
 
         Returns:
             True if the notification was sent successfully, False otherwise
+
         """
         ...
 
@@ -45,6 +45,7 @@ class ConsoleChannel:
 
         Returns:
             True, as console notifications always succeed
+
         """
         prefix = f"[{notification_type.name}]"
         print(f"{prefix} {message}")
@@ -69,10 +70,11 @@ class Notifier:
 
         Args:
             default_channel: The default channel to send notifications through
+
         """
         self._thresholds: Dict[str, Threshold] = {}
         self._channels: List[NotificationChannel] = []
-        
+
         # Set up default console channel if none provided
         if default_channel is not None:
             self._channels.append(default_channel)
@@ -84,6 +86,7 @@ class Notifier:
 
         Args:
             channel: The channel to add
+
         """
         if channel not in self._channels:
             self._channels.append(channel)
@@ -93,6 +96,7 @@ class Notifier:
 
         Args:
             channel: The channel to remove
+
         """
         if channel in self._channels:
             self._channels.remove(channel)
@@ -111,11 +115,12 @@ class Notifier:
             value: The threshold value
             notification_type: The type of notification to send when exceeded
             message_template: Optional custom message template
+
         """
         template = message_template
         if template is None:
             template = "{name} threshold exceeded: {actual_value} > {threshold_value}"
-            
+
         self._thresholds[name] = Threshold(
             name=name,
             value=value,
@@ -137,32 +142,33 @@ class Notifier:
 
         Raises:
             KeyError: If no threshold with the given name exists
+
         """
         if name not in self._thresholds:
             raise KeyError(f"No threshold with name '{name}' exists")
-            
+
         threshold = self._thresholds[name]
-        
+
         if actual_value > threshold.value:
             message = threshold.message_template.format(
                 name=threshold.name,
                 actual_value=actual_value,
                 threshold_value=threshold.value,
             )
-            
+
             # Send through all channels
             success = False
             for channel in self._channels:
                 if channel.send(message, threshold.notification_type):
                     success = True
-                    
+
             return success
-            
+
         return False
 
     def notify(
-        self, 
-        message: str, 
+        self,
+        message: str,
         notification_type: NotificationType = NotificationType.INFO
     ) -> bool:
         """Send a manual notification through all channels.
@@ -173,27 +179,29 @@ class Notifier:
 
         Returns:
             True if the notification was sent through at least one channel
+
         """
         success = False
         for channel in self._channels:
             if channel.send(message, notification_type):
                 success = True
-                
+
         return success
-        
+
     def get_threshold(self, name: str) -> Union[int, float]:
         """Get a threshold value by name.
-        
+
         Args:
             name: The name of the threshold
-            
+
         Returns:
             The threshold value
-            
+
         Raises:
             KeyError: If no threshold with the given name exists
+
         """
         if name not in self._thresholds:
             raise KeyError(f"No threshold with name '{name}' exists")
-            
+
         return self._thresholds[name].value

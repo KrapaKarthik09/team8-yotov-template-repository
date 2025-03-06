@@ -15,7 +15,7 @@ class TestLogger:
         """Test that operations are logged correctly."""
         self.logger.log_operation("add", {"a": 1, "b": 2}, 3)
         logs = self.logger.get_logs()
-        
+
         assert len(logs) == 1
         assert logs[0].operation == "add"
         assert logs[0].parameters == {"a": 1, "b": 2}
@@ -27,12 +27,12 @@ class TestLogger:
         self.logger.log_operation("add", {"a": 1, "b": 2}, 3)
         self.logger.log_operation("subtract", {"a": 5, "b": 2}, 3)
         self.logger.log_operation("add", {"a": 3, "b": 4}, 7)
-        
+
         # Get logs for add operations
         add_logs = self.logger.get_logs("add")
         assert len(add_logs) == 2
         assert all(log.operation == "add" for log in add_logs)
-        
+
         # Get logs for subtract operations
         subtract_logs = self.logger.get_logs("subtract")
         assert len(subtract_logs) == 1
@@ -42,9 +42,9 @@ class TestLogger:
         """Test clearing all logs."""
         self.logger.log_operation("add", {"a": 1, "b": 2}, 3)
         self.logger.log_operation("subtract", {"a": 5, "b": 2}, 3)
-        
+
         assert len(self.logger.get_logs()) == 2
-        
+
         self.logger.clear_logs()
         assert len(self.logger.get_logs()) == 0
 
@@ -53,7 +53,7 @@ class TestLogger:
         self.logger.log_operation("add", {"a": 1, "b": 2}, 3)
         self.logger.log_operation("subtract", {"a": 5, "b": 2}, 3)
         self.logger.log_operation("add", {"a": 3, "b": 4}, 7)
-        
+
         assert self.logger.count_logs() == 3
         assert self.logger.count_logs("add") == 2
         assert self.logger.count_logs("subtract") == 1
@@ -65,6 +65,6 @@ class TestLogger:
         self.logger.log_operation(
             "add", {"a": 1, "b": 2}, 3, metadata=metadata
         )
-        
+
         logs = self.logger.get_logs()
         assert logs[0].metadata == metadata

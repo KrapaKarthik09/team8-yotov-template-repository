@@ -16,6 +16,12 @@ jobs:
             echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
             source $BASH_ENV
       - run:
+          name: Install ruff with uv
+          command: uv pip install ruff
+      - run:
+          name: Run ruff check
+          command: ruff check .
+      - run:
           name: Install Dependencies
           command: |
             uv sync
@@ -61,98 +67,3 @@ workflows:
   build_and_test:
     jobs:
       - test
-```
-
-# 3. README.md
-```markdown
-# Team8 Template Repository
-
-This repository contains a Python project with three main components that demonstrate software design patterns, testing, and CI/CD integration.
-
-## Components
-
-### Calculator
-
-A basic arithmetic calculator component that provides addition, subtraction, multiplication, and division operations.
-
-### Logger
-
-A logging component that records operations and their results for later retrieval and analysis.
-
-### Notifier
-
-A notification component that sends alerts when values exceed predefined thresholds.
-
-## Project Structure
-
-```
-team8-yotov-template-repository/
-├── calculator/         # Calculator component
-├── logger/             # Logger component
-├── notifier/           # Notifier component
-├── tests/              # Integration and end-to-end tests
-├── .circleci/          # CircleCI configuration
-└── ...                 # Other project files
-```
-
-## Installation
-
-1. Clone the repository:
-   ```
-   git clone https://github.com/yourusername/team8-yotov-template-repository.git
-   cd team8-yotov-template-repository
-   ```
-
-2. Install all components and dependencies:
-   ```
-   # Using uv (recommended)
-   for component in calculator logger notifier; do
-     cd $component && uv pip install -e . && cd ..
-   done
-   uv pip install -e .
-   
-   # Or using pip
-   for component in calculator logger notifier; do
-     cd $component && pip install -e . && cd ..
-   done
-   pip install -e .
-   ```
-
-## Usage
-
-Here's a simple example of using all three components together:
-
-```python
-from calculator.calculator import Calculator
-from logger.logger import Logger
-from notifier.notifier import Notifier
-
-# Create instances
-calculator = Calculator()
-logger = Logger()
-notifier = Notifier()
-
-# Set up a threshold
-notifier.set_threshold("result", 100)
-
-# Perform a calculation
-result = calculator.multiply(12, 15)
-
-# Log the operation
-logger.log_operation("multiply", {"a": 12, "b": 15}, result)
-
-# Check if result exceeds threshold
-notifier.check_threshold("result", result)
-```
-
-## Testing
-
-Run tests for all components:
-
-```
-pytest
-```
-
-## License
-
-[License details here]
