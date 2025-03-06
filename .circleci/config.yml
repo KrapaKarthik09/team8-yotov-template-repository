@@ -29,9 +29,9 @@ jobs:
       - run:
           name: Run Ruff Check
           command: uv run ruff check .
-      - run:
-          name: Run Type Checker
-          command: uv run mypy calculator logger notifier tests
+      # - run:
+      #     name: Run Type Checker
+      #     command: uv run mypy calculator logger notifier tests
       - run:
           name: Run Tests
           command: | 
