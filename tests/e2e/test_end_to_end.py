@@ -1,8 +1,8 @@
 """End-to-end tests for the complete system."""
 
-from calculator import Calculator
-from logger import Logger
-from notifier import Notifier, NotificationType
+from calculator.src.calculator import Calculator
+from logger.src.logger import Logger
+from notifier.src.notifier import Notifier, NotificationType
 
 
 class TestEndToEnd:
