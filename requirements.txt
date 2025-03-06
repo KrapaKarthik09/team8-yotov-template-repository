@@ -1,9 +1,0 @@
-uv
-pytest
-nose2
-mypy
-ruff
-coverage
-codecov
-pre-commit
-nanobind
