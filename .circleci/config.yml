@@ -13,13 +13,13 @@ jobs:
           name: Install uv
           command: |
             curl -LsSf https://astral.sh/uv/install.sh | sh
-            echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
-            source $BASH_ENV
-      - run:
-          name: Create and Activate Virtual Environment
-          command: |
-            uv venv
-            source .venv/bin/activate
+            uv sync
+            uv pip install -e .
+      # - run:
+      #     name: Create and Activate Virtual Environment
+      #     command: |
+      #       uv venv
+      #       source .venv/bin/activate
       - run:
           name: Install ruff with uv
           command: uv pip install ruff
