@@ -1,1 +1,1 @@
-"""Tests package for the project."""
+"""End-to-end tests package."""

@@ -1,0 +1,13 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "notifier"
+version = "0.1.0"
+description = "Notifier component for sending alerts when values exceed thresholds"
+requires-python = ">=3.11"
+authors = [
+    {name = "Team8", email = "team8@example.com"},
+]
+dependencies = []

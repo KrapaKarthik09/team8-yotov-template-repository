@@ -1,10 +1,21 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "team8-yotov-template-repository"
 version = "0.1.0"
 description = "Template repository for Python projects with CI/CD, linting, testing, and coverage."
 readme = "README.md"
-requires-python = ">=3.11"  # Use a stable Python version
-dependencies = [
+requires-python = ">=3.11"
+authors = [
+    {name = "Team8", email = "team8@example.com"},
+]
+license = {file = "LICENSE"}
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
     "coverage>=7.6.11",
     "mypy>=1.15.0",
     "pre-commit>=4.1.0",
@@ -17,12 +28,24 @@ dependencies = [
 line-length = 88
 
 [tool.ruff.lint]
-select = [
-    "E",  # Error codes (PEP 8)
-    "F",  # Pyflakes
-    "W",  # Warnings (PEP 8)
-    "D",  # Documentation checks
-    "ANN",  # Type annotation checks
-    "PLR",  # Refactoring checks
-]
-ignore = ["E501", "S101"]  # Ignore line length and `assert` warnings
+select = ["E", "F", "W", "D", "ANN", "PLR"]
+ignore = ["E501", "S101"] 
+
+[tool.mypy]
+python_version = "3.11"
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+
+# Add this section to specify what to include in the wheel
+[tool.hatch.build.targets.wheel]
+packages = ["tests"]

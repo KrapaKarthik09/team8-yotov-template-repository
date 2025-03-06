@@ -1,1 +1,1 @@
-"""Integration tests package for the project."""
+"""Integration tests between components."""

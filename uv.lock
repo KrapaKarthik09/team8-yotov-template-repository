@@ -289,8 +289,10 @@ wheels = [
 [[package]]
 name = "team8-yotov-template-repository"
 version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
+source = { editable = "." }
+
+[package.optional-dependencies]
+dev = [
     { name = "coverage" },
     { name = "mypy" },
     { name = "pre-commit" },
@@ -301,13 +303,14 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "coverage", specifier = ">=7.6.11" },
-    { name = "mypy", specifier = ">=1.15.0" },
-    { name = "pre-commit", specifier = ">=4.1.0" },
-    { name = "pytest", specifier = ">=8.3.4" },
-    { name = "pytest-cov", specifier = ">=6.0.0" },
-    { name = "ruff", specifier = ">=0.9.5" },
+    { name = "coverage", marker = "extra == 'dev'", specifier = ">=7.6.11" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.15.0" },
+    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.1.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.4" },
+    { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=6.0.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.9.5" },
 ]
+provides-extras = ["dev"]
 
 [[package]]
 name = "tomli"

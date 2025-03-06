@@ -1,0 +1,13 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "logger"
+version = "0.1.0"
+description = "Logger component for recording operations and their results"
+requires-python = ">=3.11"
+authors = [
+    {name = "Team8", email = "team8@example.com"},
+]
+dependencies = []

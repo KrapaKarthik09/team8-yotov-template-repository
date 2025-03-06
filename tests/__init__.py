@@ -1,1 +1,1 @@
-"""Tests package for the project."""
+"""Tests for the template repository components."""

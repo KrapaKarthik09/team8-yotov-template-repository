@@ -1,0 +1,16 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "calculator"
+version = "0.1.0"
+description = "Calculator component for basic arithmetic operations"
+requires-python = ">=3.11"
+authors = [
+    {name = "Team8", email = "team8@example.com"},
+]
+dependencies = []
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
