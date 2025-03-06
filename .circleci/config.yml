@@ -16,17 +16,19 @@ jobs:
             echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
             source $BASH_ENV
       - run:
-          name: Create Virtual Environment
-          command: uv venv
-      - run:
-          name: Activate Virtual Environment
-          command: source .venv/bin/activate
+          name: Create and Activate Virtual Environment
+          command: |
+            uv venv
+            source .venv/bin/activate
       - run:
           name: Install ruff with uv
           command: uv pip install ruff
       - run:
-          name: Run ruff check
-          command: ruff check .
+          name: Verify Ruff Installation
+          command: uv run which ruff
+      - run:
+          name: Run Ruff Check
+          command: uv run ruff check .
       - run:
           name: Install Dependencies
           command: |
