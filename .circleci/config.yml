@@ -33,6 +33,11 @@ jobs:
       #     name: Run Type Checker
       #     command: uv run mypy calculator logger notifier tests
       - run:
+          name: Install Dependencies
+          command: |
+            uv sync
+            uv pip install pytest pytest-cov  # Ensure pytest is installed
+      - run:
           name: Run Tests
           command: | 
             export PYTHONPATH="$PYTHONPATH:$PWD"
