@@ -41,7 +41,7 @@ jobs:
           name: Run Tests
           command: | 
             export PYTHONPATH="$PYTHONPATH:$PWD"
-            uv run pytest --junitxml=test-results/results.xml --cov=src
+            uv run pytest --junitxml=test-results/results.xml --cov=calculator --cov=logger --cov=notifier --cov=tests
       - run:
           name: Upload Coverage
           command: uv run coverage xml
