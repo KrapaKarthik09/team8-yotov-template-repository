@@ -30,19 +30,6 @@ jobs:
           name: Run Ruff Check
           command: uv run ruff check .
       - run:
-          name: Install Dependencies
-          command: |
-            uv sync
-            # Install component packages
-            for component in calculator logger notifier; do
-              cd $component && uv pip install -e . && cd ..
-            done
-            # Install main package
-            uv pip install -e .
-      - run:
-          name: Run Linter
-          command: uv run ruff check .
-      - run:
           name: Run Type Checker
           command: uv run mypy calculator logger notifier tests
       - run:
