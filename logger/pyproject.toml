@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "logger"
+version = "0.1.0"
+description = "Logger component for recording operations and their results"
+requires-python = ">=3.11"
+authors = [
+    {name = "Team8", email = "team8@example.com"},
+]
+
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.4",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["src"]
+python_files = "test_*.py"
