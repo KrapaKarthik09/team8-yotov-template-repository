@@ -1,0 +1,69 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@1.2
+
+jobs:
+  test:
+    docker:
+      - image: cimg/python:3.13
+    steps:
+      - checkout
+      - run:
+          name: Install uv
+          command: |
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+            uv sync
+            uv pip install -e .
+      # - run:
+      #     name: Create and Activate Virtual Environment
+      #     command: |
+      #       uv venv
+      #       source .venv/bin/activate
+      - run:
+          name: Install ruff with uv
+          command: uv pip install ruff
+      - run:
+          name: Verify Ruff Installation
+          command: uv run which ruff
+      - run:
+          name: Run Ruff Check
+          command: uv run ruff check .
+      # - run:
+      #     name: Run Type Checker
+      #     command: uv run mypy calculator logger notifier tests
+      - run:
+          name: Install Dependencies
+          command: |
+            uv sync
+            uv pip install pytest pytest-cov  # Ensure pytest is installed
+      - run:
+          name: Run Tests
+          command: | 
+            export PYTHONPATH="$PYTHONPATH:$PWD"
+            uv run pytest --junitxml=test-results/results.xml --cov=calculator --cov=logger --cov=notifier --cov=tests
+      - run:
+          name: Upload Coverage
+          command: uv run coverage xml
+      - run:
+          name: Generate coverage report
+          command: uv run coverage report
+      - run:
+          name: Generate coverage HTML report
+          command: uv run coverage html
+
+      # Store test results to display in CircleCI UI
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
+          destination: test-results
+      - store_artifacts:
+          path: htmlcov
+          destination: coverage-report
+          
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - test
