@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  python: circleci/python@2.1.1
+  python: circleci/python@2.1
 
 jobs:
   build-and-test:
@@ -9,10 +9,9 @@ jobs:
       - image: cimg/python:3.12
     steps:
       - checkout
-      - python/install-packages:
-          pkg-manager: pip
-          packages:
-            - uv
+      - run:
+          name: Install uv
+          command: pip install uv
       - run:
           name: Create virtual environment and install packages
           command: |
