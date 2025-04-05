@@ -10,19 +10,31 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install uv
-          command: pip install uv
+          name: Install dependencies
+          command: |
+            pip install uv coverage ruff
       - run:
           name: Create virtual environment and install packages
           command: |
             uv venv
             source .venv/bin/activate
             uv pip install -e my_inbox_api
+            uv pip install coverage ruff
       - run:
-          name: Run tests
+          name: Run linting with Ruff
           command: |
             source .venv/bin/activate
-            python -m unittest discover -s my_inbox_api/tests
+            ruff check my_inbox_api/
+      - run:
+          name: Run tests with coverage
+          command: |
+            source .venv/bin/activate
+            coverage run -m unittest discover -s my_inbox_api/tests
+            coverage report -m
+            coverage xml
+      - store_artifacts:
+          path: coverage.xml
+          destination: coverage-report
 
 workflows:
   main:
