@@ -19,8 +19,8 @@ jobs:
           command: |
             uv venv
             source .venv/bin/activate
-            uv install -e my_inbox_api
-            uv install coverage ruff pytest
+            uv pip install -e my_inbox_api
+            uv pip install coverage ruff pytest
       - run:
           name: Run linting with Ruff
           command: |
