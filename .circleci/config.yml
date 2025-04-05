@@ -13,22 +13,28 @@ jobs:
             curl -LsSf https://astral.sh/uv/install.sh | sh
             uv sync
       - run:
-          name: Install my_inbox_api package
+          name: List directory structure for debugging
           command: |
-            cd my_inbox_api
-            uv pip install -e .
+            ls -la
+            find . -type d -name "my_inbox_api" -o -name "my_inbox_impl"
+      - run:
+          name: Install API package
+          command: |
+            # Use full path explicitly
+            pwd
+            uv pip install -e ./my_inbox_api
       - run:
           name: Install test dependencies
           command: uv pip install ruff pytest pytest-cov coverage
       - run:
           name: Run Ruff Check on my_inbox_api
-          command: uv run ruff check my_inbox_api/
+          command: uv run ruff check ./my_inbox_api/
       - run:
           name: Run Tests
           command: | 
             export PYTHONPATH="$PYTHONPATH:$PWD"
             mkdir -p test-results
-            uv run pytest my_inbox_api/tests --junitxml=test-results/results.xml --cov=my_inbox_api
+            uv run pytest ./my_inbox_api/tests --junitxml=test-results/results.xml --cov=my_inbox_api
       - run:
           name: Generate coverage reports
           command: |
