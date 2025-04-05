@@ -13,34 +13,27 @@ jobs:
             curl -LsSf https://astral.sh/uv/install.sh | sh
             echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
       - run:
-          name: Setup working directory and virtual environment
+          name: Install dependencies and package
           command: |
-            # Change to the my_inbox_api directory
+            # Install test dependencies globally
+            uv pip install --system pytest pytest-cov coverage ruff
+            # Change to package directory and install it in development mode
             cd my_inbox_api
-            # Create virtual environment within the package directory
-            uv venv
-            source .venv/bin/activate
-            # Install package in development mode
-            uv pip install -e .
-            # Install test dependencies
-            uv pip install coverage ruff pytest
+            uv pip install --system -e .
       - run:
           name: Run linting with Ruff
           command: |
             cd my_inbox_api
-            source .venv/bin/activate
-            uv run ruff check src/
+            ruff check src/
       - run:
           name: Run tests with coverage
           command: |
             cd my_inbox_api
-            source .venv/bin/activate
             mkdir -p ../test-results/pytest
-            uv run -- python -m pytest tests --junitxml=../test-results/pytest/results.xml
-            uv run -- coverage run -m pytest tests
-            uv run -- coverage report -m
-            # Write coverage xml to a location CircleCI can find
-            uv run -- coverage xml -o ../coverage.xml
+            python -m pytest tests --junitxml=../test-results/pytest/results.xml
+            coverage run -m pytest tests
+            coverage report -m
+            coverage xml -o ../coverage.xml
       - store_artifacts:
           path: coverage.xml
           destination: coverage-report
