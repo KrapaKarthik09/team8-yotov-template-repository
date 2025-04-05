@@ -1,57 +1,47 @@
 version: 2.1
+
 orbs:
-  python: circleci/python@1.2
+  python: circleci/python@2.1
+
 jobs:
-  test:
+  build-and-test:
     docker:
-      - image: cimg/python:3.13
+      - image: cimg/python:3.12
     steps:
       - checkout
       - run:
-          name: Install uv
+          name: Install UV
           command: |
             curl -LsSf https://astral.sh/uv/install.sh | sh
-            uv sync
+            echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
       - run:
-          name: List directory contents
+          name: Create virtual environment and install packages
           command: |
-            ls -la
-            ls -la my_inbox_api
+            uv venv
+            source .venv/bin/activate
+            uv pip install -e my_inbox_api
+            uv pip install coverage ruff pytest
       - run:
-          name: Install my_inbox_api package
+          name: Run linting with Ruff
           command: |
-            cd my_inbox_api
-            # Use uv install instead of uv pip install
-            uv install -e .
-            # Install test dependencies in the same venv
-            uv install ruff pytest pytest-cov coverage
+            source .venv/bin/activate
+            uv run ruff check my_inbox_api/
       - run:
-          name: Run Ruff Check on my_inbox_api
+          name: Run tests with coverage
           command: |
-            cd my_inbox_api
-            uv run ruff check src/
-      - run:
-          name: Run Tests
-          command: | 
-            cd my_inbox_api
-            mkdir -p ../test-results
-            # Run tests from within the package directory
-            uv run pytest tests/ --junitxml=../test-results/results.xml --cov=src
-            uv run coverage xml -o ../coverage.xml
-            uv run coverage report
-            uv run coverage html -d ../htmlcov
-      # Store test results to display in CircleCI UI
+            source .venv/bin/activate
+            mkdir -p test-results/pytest
+            uv run -- python -m pytest my_inbox_api/tests --junitxml=test-results/pytest/results.xml
+            uv run -- coverage run -m pytest my_inbox_api/tests
+            uv run -- coverage report -m
+            uv run -- coverage xml
+      - store_artifacts:
+          path: coverage.xml
+          destination: coverage-report
       - store_test_results:
           path: test-results
-      - store_artifacts:
-          path: test-results
-          destination: test-results
-      - store_artifacts:
-          path: htmlcov
-          destination: coverage-report
-          
+
 workflows:
-  version: 2
-  build_and_test:
+  main:
     jobs:
-      - test
+      - build-and-test
