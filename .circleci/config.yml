@@ -1,6 +1,8 @@
 version: 2.1
+
 orbs:
   python: circleci/python@1.2
+
 jobs:
   test:
     docker:
@@ -12,35 +14,44 @@ jobs:
           command: |
             curl -LsSf https://astral.sh/uv/install.sh | sh
             uv sync
+            uv pip install -e .
+      # - run:
+      #     name: Create and Activate Virtual Environment
+      #     command: |
+      #       uv venv
+      #       source .venv/bin/activate
       - run:
-          name: List directory structure for debugging
+          name: Install ruff with uv
+          command: uv pip install ruff
+      - run:
+          name: Verify Ruff Installation
+          command: uv run which ruff
+      - run:
+          name: Run Ruff Check
+          command: uv run ruff check .
+      # - run:
+      #     name: Run Type Checker
+      #     command: uv run mypy calculator logger notifier tests
+      - run:
+          name: Install Dependencies
           command: |
-            ls -la
-            find . -type d -name "my_inbox_api" -o -name "my_inbox_impl"
-      - run:
-          name: Install API package
-          command: |
-            # Use full path explicitly
-            pwd
-            uv pip install -e ./my_inbox_api
-      - run:
-          name: Install test dependencies
-          command: uv pip install ruff pytest pytest-cov coverage
-      - run:
-          name: Run Ruff Check on my_inbox_api
-          command: uv run ruff check ./my_inbox_api/
+            uv sync
+            uv pip install pytest pytest-cov  # Ensure pytest is installed
       - run:
           name: Run Tests
           command: | 
             export PYTHONPATH="$PYTHONPATH:$PWD"
-            mkdir -p test-results
-            uv run pytest ./my_inbox_api/tests --junitxml=test-results/results.xml --cov=my_inbox_api
+            uv run pytest --junitxml=test-results/results.xml --cov=calculator --cov=logger --cov=notifier --cov=tests
       - run:
-          name: Generate coverage reports
-          command: |
-            uv run coverage xml
-            uv run coverage report
-            uv run coverage html
+          name: Upload Coverage
+          command: uv run coverage xml
+      - run:
+          name: Generate coverage report
+          command: uv run coverage report
+      - run:
+          name: Generate coverage HTML report
+          command: uv run coverage html
+
       # Store test results to display in CircleCI UI
       - store_test_results:
           path: test-results
