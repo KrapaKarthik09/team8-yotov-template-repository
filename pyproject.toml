@@ -1,0 +1,35 @@
+﻿[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "team8-yotov-template"
+version = "0.1.0"
+description = "NYU OSS team project for inbox client"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv.workspace]
+members = ["my_inbox_api", "my_inbox_impl"]
+
+[tool.pytest.ini_options]
+testpaths = ["my_inbox_api/tests", "my_inbox_impl/tests"]
+
+[tool.ruff]
+# Enable flake8-bugbear rules
+select = ["E", "F", "B"]
+# Never enforce line length
+line-length = 100
+# Exclude tests and other directories
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+]
+# Allow unused variables when underscore-prefixed
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+# Target Python 3.12
+target-version = "py312"
