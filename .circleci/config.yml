@@ -1,47 +1,52 @@
 version: 2.1
-
 orbs:
-  python: circleci/python@2.1
-
+  python: circleci/python@1.2
 jobs:
-  build-and-test:
+  test:
     docker:
-      - image: cimg/python:3.12
+      - image: cimg/python:3.13
     steps:
       - checkout
       - run:
-          name: Install UV
+          name: Install uv
           command: |
             curl -LsSf https://astral.sh/uv/install.sh | sh
-            echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
+            uv sync
       - run:
-          name: Create virtual environment and install packages
+          name: Install my_inbox_api package
           command: |
-            uv venv
-            source .venv/bin/activate
-            uv pip install -e my_inbox_api
-            uv pip install coverage ruff pytest
+            cd my_inbox_api
+            uv pip install -e .
       - run:
-          name: Run linting with Ruff
-          command: |
-            source .venv/bin/activate
-            uv run ruff check my_inbox_api/
+          name: Install test dependencies
+          command: uv pip install ruff pytest pytest-cov coverage
       - run:
-          name: Run tests with coverage
+          name: Run Ruff Check on my_inbox_api
+          command: uv run ruff check my_inbox_api/
+      - run:
+          name: Run Tests
+          command: | 
+            export PYTHONPATH="$PYTHONPATH:$PWD"
+            mkdir -p test-results
+            uv run pytest my_inbox_api/tests --junitxml=test-results/results.xml --cov=my_inbox_api
+      - run:
+          name: Generate coverage reports
           command: |
-            source .venv/bin/activate
-            mkdir -p test-results/pytest
-            uv run -- python -m pytest my_inbox_api/tests --junitxml=test-results/pytest/results.xml
-            uv run -- coverage run -m pytest my_inbox_api/tests
-            uv run -- coverage report -m
-            uv run -- coverage xml
-      - store_artifacts:
-          path: coverage.xml
-          destination: coverage-report
+            uv run coverage xml
+            uv run coverage report
+            uv run coverage html
+      # Store test results to display in CircleCI UI
       - store_test_results:
           path: test-results
-
+      - store_artifacts:
+          path: test-results
+          destination: test-results
+      - store_artifacts:
+          path: htmlcov
+          destination: coverage-report
+          
 workflows:
-  main:
+  version: 2
+  build_and_test:
     jobs:
-      - build-and-test
+      - test
