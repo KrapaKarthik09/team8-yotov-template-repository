@@ -10,31 +10,36 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install dependencies
+          name: Install UV
           command: |
-            pip install uv coverage ruff
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+            echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
       - run:
           name: Create virtual environment and install packages
           command: |
             uv venv
             source .venv/bin/activate
-            uv pip install -e my_inbox_api
-            uv pip install coverage ruff
+            uv install -e my_inbox_api
+            uv install coverage ruff pytest
       - run:
           name: Run linting with Ruff
           command: |
             source .venv/bin/activate
-            ruff check my_inbox_api/
+            uv run ruff check my_inbox_api/
       - run:
           name: Run tests with coverage
           command: |
             source .venv/bin/activate
-            coverage run -m unittest discover -s my_inbox_api/tests
-            coverage report -m
-            coverage xml
+            mkdir -p test-results/pytest
+            uv run -- python -m pytest my_inbox_api/tests --junitxml=test-results/pytest/results.xml
+            uv run -- coverage run -m pytest my_inbox_api/tests
+            uv run -- coverage report -m
+            uv run -- coverage xml
       - store_artifacts:
           path: coverage.xml
           destination: coverage-report
+      - store_test_results:
+          path: test-results
 
 workflows:
   main:
