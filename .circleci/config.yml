@@ -13,28 +13,33 @@ jobs:
             curl -LsSf https://astral.sh/uv/install.sh | sh
             uv sync
       - run:
+          name: List directory contents
+          command: |
+            ls -la
+            ls -la my_inbox_api
+      - run:
           name: Install my_inbox_api package
           command: |
             cd my_inbox_api
-            uv pip install -e .
-      - run:
-          name: Install test dependencies
-          command: uv pip install ruff pytest pytest-cov coverage
+            # Use uv install instead of uv pip install
+            uv install -e .
+            # Install test dependencies in the same venv
+            uv install ruff pytest pytest-cov coverage
       - run:
           name: Run Ruff Check on my_inbox_api
-          command: uv run ruff check my_inbox_api/
+          command: |
+            cd my_inbox_api
+            uv run ruff check src/
       - run:
           name: Run Tests
           command: | 
-            export PYTHONPATH="$PYTHONPATH:$PWD"
-            mkdir -p test-results
-            uv run pytest my_inbox_api/tests --junitxml=test-results/results.xml --cov=my_inbox_api
-      - run:
-          name: Generate coverage reports
-          command: |
-            uv run coverage xml
+            cd my_inbox_api
+            mkdir -p ../test-results
+            # Run tests from within the package directory
+            uv run pytest tests/ --junitxml=../test-results/results.xml --cov=src
+            uv run coverage xml -o ../coverage.xml
             uv run coverage report
-            uv run coverage html
+            uv run coverage html -d ../htmlcov
       # Store test results to display in CircleCI UI
       - store_test_results:
           path: test-results
