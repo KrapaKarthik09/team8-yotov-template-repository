@@ -26,11 +26,10 @@ jobs:
             source .venv/bin/activate
             ruff check .
       - run:
-          name: Run Tests
+          name: Dir for Tests
           command: | 
             source .venv/bin/activate
             mkdir -p test-results
-            pytest . --junitxml=test-results/junit.xml
       - run:
           name: Run Static Analysis mypy
           command: | 
@@ -40,6 +39,7 @@ jobs:
           name: Generate Coverage Reports
           command: |
             source .venv/bin/activate
+            coverage run -m pytest my_inbox_api/tests/ --junitxml=test-results/junit.xml
             coverage report --fail-under=80 
             coverage xml #Generate XML report
             coverage json -o test-results/coverage.json #Generate JSON report
