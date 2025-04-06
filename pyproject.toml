@@ -1,13 +1,17 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
 [project]
-name = "team8-yotov-template"
+name = "team8-yotov-template-myinbox"
 version = "0.1.0"
-description = "NYU OSS team project for inbox client"
+description = "NYU OSSPD Team 8 Email Interface and Implementation"
 readme = "README.md"
 requires-python = ">=3.12"
+authors = [
+    {name = "Team8"}
+]
+license = {file = "LICENSE"}
 dependencies = []
 
 [tool.uv.workspace]
@@ -22,9 +26,31 @@ testpaths = ["my_inbox_api/tests", "my_inbox_impl/tests"]
 
 [tool.ruff]
 line-length = 100
+select = ["E", "F", "W", "D", "ANN", "PLR"]
+ignore = ["E501", "S101", "PLR2004","ANN101","D407","D406"] # ignore 
 
 [tool.ruff.lint]
-select = ["E", "F", "B"]
+select = ["ALL"]
+ignore = [
+    "INP001",  # Ignore missing __init__.py for namespace packages
+    "D100",  # Ignore missing module-level docstrings
+    "D203", "D211",  # Conflicting rules about blank lines before class
+    "D212", "D213",  # Conflicting rules about multi-line docstrings
+    "S101",  # Ignore assert usage in tests
+    "T201",  # Ignore print statements in Logger component
+    "COM812",  # Suggested by ruff to disable it to avoid unexpected behavior
+    "PIE790", # Ignore unnecessary pass statement in interfaces
+    "ANN401", # Ignore dynamically typed expression are disallowed in interfaces
+    "F401", # Module imported but unused
+    "F823", # Local variable name shadows a built-in name
+    "PLR2004", # Too many branches
+    "ERA001", # File is not encoded with UTF-8
+    "F841", # Local variable assigned but not used
+    "F821", # Undefined name
+    "PGH003", # Use specific rule codes when ignoring type issues
+    "I001", # Import block is un-sorted or un-formatted
+    "N806", # Camelcase
+]
 exclude = [
     ".git",
     ".venv",
@@ -35,5 +61,4 @@ exclude = [
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [tool.ruff.lint.per-file-ignores]
-"my_inbox_api/src/my_inbox_api/__init__.py" = ["E501"]
-"my_inbox_api/tests/test_interface.py" = ["F401"]
+"tests/**/*.py" = ["S101", "ANN001", "ANN201"]
