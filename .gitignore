@@ -32,6 +32,14 @@ coverage.xml
 *.cover
 .hypothesis/
 
+.coveragerc
+
+#ruff
+.ruff_cache
+
+# mypy
+.mypy_cache/
+
 echo "__pycache__/" >> .gitignore
 echo "*.pyc" >> .gitignore
 echo ".pytest_cache/" >> .gitignore
