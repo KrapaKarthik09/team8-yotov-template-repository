@@ -30,7 +30,7 @@ select = ["E", "F", "W", "D", "ANN", "PLR"]
 ignore = ["E501", "S101", "PLR2004","ANN101","D407","D406"] # ignore 
 
 [tool.ruff.lint]
-select = ["ALL"]
+select = ["E", "F", "W", "D", "ANN", "PLR"]
 ignore = [
     "INP001",  # Ignore missing __init__.py for namespace packages
     "D100",  # Ignore missing module-level docstrings
@@ -56,7 +56,6 @@ ignore = [
     "PT009",
     "W293",
     "ANN201", "ANN001"
-
 ]
 exclude = [
     ".git",
