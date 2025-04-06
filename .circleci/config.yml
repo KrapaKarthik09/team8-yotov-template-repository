@@ -21,17 +21,33 @@ jobs:
             uv pip install -e my_inbox_api
             uv pip install coverage ruff
       - run:
-          name: Run linting with Ruff
+          name: Run linting and formatting check with Ruff
           command: |
             source .venv/bin/activate
-            ruff check my_inbox_api/
+            ruff check .
+            ruff format --check .
       - run:
-          name: Run tests with coverage
+          name: Run Tests
+          command: | 
+            source .venv/bin/activate
+            mkdir -p test-results
+            pytest . --junitxml=test-results/junit.xml
+      - run:
+          name: Run Static Analysis mypy
+          command: | 
+            source .venv/bin/activate
+            mypy src tests
+      - run:
+          name: Generate Coverage Reports
           command: |
             source .venv/bin/activate
-            coverage run -m unittest discover -s my_inbox_api/tests
-            coverage report -m
-            coverage xml
+            coverage report --fail-under=80 
+            coverage xml #Generate XML report
+            coverage json -o test-results/coverage.json #Generate JSON report
+      - store_test_results:
+          path: test-results
+      - store_artifacts: 
+          path: htmlcov
       - store_artifacts:
           path: coverage.xml
           destination: coverage-report
