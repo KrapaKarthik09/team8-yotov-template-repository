@@ -9,14 +9,14 @@ class MockChannel:
 
     def __init__(self, should_succeed: bool = True) -> None:
         """Initialize mock channel.
-
+    
         Args:
             should_succeed: Whether send operations should succeed
-
+    
         """
         self.should_succeed = should_succeed
-        self.messages = []
-
+        self.messages: list[tuple[str, NotificationType]] = []
+    
     def send(self, message: str, notification_type: NotificationType) -> bool:
         """Record message and return success indicator.
 
