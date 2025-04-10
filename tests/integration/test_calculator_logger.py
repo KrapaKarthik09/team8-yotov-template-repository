@@ -52,7 +52,7 @@ def test_logger_recording_calculator_errors() -> None:
     assert logs[0].operation == "divide"
     assert logs[0].parameters == {"a": 10, "b": 0}
     assert logs[0].result is None
-    assert "Cannot divide by zero" in logs[0].metadata["error"]
+    assert logs[0].metadata is not None and "error" in logs[0].metadata and "Cannot divide by zero" in logs[0].metadata["error"]
 
 
 def test_calculator_multiple_operations_logging() -> None:
