@@ -29,8 +29,10 @@ packages = ["calculator", "logger", "notifier", "tests"]
 
 [tool.ruff]
 line-length = 88
+
+[tool.ruff.lint]
 select = ["E", "F", "W", "D", "ANN", "PLR"]
-ignore = ["E501", "S101", "PLR2004","ANN101","D407","D406"] 
+ignore = ["E501", "S101", "PLR2004", "D407", "D406"]
 
 [tool.mypy]
 python_version = "3.11"
