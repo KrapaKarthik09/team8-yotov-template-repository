@@ -91,7 +91,7 @@ class TestEndToEnd:
         assert len(logs) == 1
         assert logs[0].operation == "divide"
         assert logs[0].result is None
-        assert "Cannot divide by zero" in logs[0].metadata["error"]
+        assert logs[0].metadata is not None and "error" in logs[0].metadata and "Cannot divide by zero" in logs[0].metadata["error"]
 
     def test_performance_monitoring(self) -> None:
         """Test monitoring performance of calculations."""
