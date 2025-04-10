@@ -21,6 +21,11 @@ jobs:
       #       uv venv
       #       source .venv/bin/activate
       - run:
+          name: Install Dependencies
+          command: |
+            uv sync
+            uv pip install pytest pytest-cov mypy pytest-mypy-plugins
+      - run:
           name: Install ruff with uv
           command: uv pip install ruff
       - run:
