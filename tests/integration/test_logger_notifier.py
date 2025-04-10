@@ -8,15 +8,15 @@ class LogMonitoringChannel:
 
     def __init__(self, operation: str, threshold: int) -> None:
         """Initialize monitor for specific operation type and threshold.
-
+    
         Args:
             operation: The operation to monitor
             threshold: The threshold for number of operations
-
+    
         """
         self.operation = operation
         self.threshold = threshold
-        self.alerts_sent = []
+        self.alerts_sent: list[tuple[str, NotificationType]] = []
 
     def send(self, message: str, notification_type: NotificationType) -> bool:
         """Send a notification and record it.
