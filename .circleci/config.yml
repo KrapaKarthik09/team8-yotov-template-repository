@@ -28,6 +28,9 @@ jobs:
           command: uv run which ruff
       - run:
           name: Run Ruff Check
+          command: uv run ruff check --fix --unsafe-fixes notifier/src/notifier/tests/test_notifier.py tests/integration/test_logger_notifier.py    
+      - run:
+          name: Run Ruff Check
           command: uv run ruff check .
       - run:
           name: Run Type Checker
