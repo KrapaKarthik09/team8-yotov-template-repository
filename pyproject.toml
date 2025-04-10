@@ -24,6 +24,9 @@ dev = [
     "ruff>=0.9.5",
 ]
 
+[tool.hatch.build.targets.wheel]
+packages = ["calculator", "logger", "notifier", "tests"]
+
 [tool.ruff]
 line-length = 88
 select = ["E", "F", "W", "D", "ANN", "PLR"]
@@ -44,6 +47,6 @@ warn_return_any = true
 testpaths = ["tests"]
 python_files = "test_*.py"
 
-# Add this section to specify what to include in the wheel
-[tool.hatch.build.targets.wheel]
-packages = ["tests"]
+# Add workspace configuration
+[tool.hatch.workspace]
+members = ["calculator", "logger", "notifier"]
