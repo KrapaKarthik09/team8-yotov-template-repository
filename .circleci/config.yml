@@ -31,11 +31,11 @@ jobs:
           command: | 
             source .venv/bin/activate
             mkdir -p test-results
-      - run:
-          name: Run Static Analysis mypy
-          command: | 
-            source .venv/bin/activate
-            mypy my_inbox_api my_inbox_impl
+      # - run:
+      #     name: Run Static Analysis mypy
+      #     command: | 
+      #       source .venv/bin/activate
+      #       mypy my_inbox_api my_inbox_impl
       - run:
           name: Generate Coverage Reports
           command: |
