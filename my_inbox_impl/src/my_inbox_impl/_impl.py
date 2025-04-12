@@ -156,7 +156,7 @@ class MessageImpl:
 class ClientImpl:
     """Implementation of the Client protocol with local storage."""
     
-    def __init__(self, data_dir: str = None) -> None:
+    def __init__(self, data_dir: Optional[str] = None) -> None:
         """Initialize the client with optional data directory.
         
         Args:
@@ -180,7 +180,7 @@ class ClientImpl:
     
     def _load_messages(self) -> Dict[str, List[MessageImpl]]:
         """Load messages from disk."""
-        messages = {}
+        messages: Dict[str, List[MessageImpl]] = {}
         
         for folder in self._folders:
             messages[folder] = []
