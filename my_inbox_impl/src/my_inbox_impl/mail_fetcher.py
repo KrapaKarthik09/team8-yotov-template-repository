@@ -139,17 +139,18 @@ class IMAPFetcher:
         body, attachments = self._extract_content(email_message)
         
         # Create and return a MessageImpl object
-        return MessageImpl(
-            message_id=message_id,
-            from_=from_,
-            to=to,
-            cc=cc,
-            bcc=bcc,
-            date=date,
-            subject=subject,
-            body=body,
-            attachments=attachments,
-            is_read=False
+        # In _parse_message and other places where MessageImpl is created
+        message = MessageImpl(
+            _id=message_id,  # Changed from message_id
+            _from=from_,     # Changed from from_
+            _to=to,          # Changed from to
+            _cc=cc,          # Changed from cc
+            _bcc=bcc,        # Changed from bcc
+            _date=date,      # Changed from date
+            _subject=subject,# Changed from subject
+            _body=body,      # Changed from body
+            _attachments=attachments,  # Changed from attachments
+            _is_read=False   # Changed from is_read
         )
     
     def _decode_header(self, header: str) -> str:
