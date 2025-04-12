@@ -38,7 +38,8 @@ class IMAPFetcher:
         if self.use_ssl:
             self.connection = imaplib.IMAP4_SSL(self.host, self.port)
         else:
-            self.connection = imaplib.IMAP4(self.host, self.port)
+            # Use type ignore to handle the type inconsistency
+            self.connection = imaplib.IMAP4(self.host, self.port)  # type: ignore
         
         # Login
         self.connection.login(self.username, self.password)
@@ -152,6 +153,7 @@ class IMAPFetcher:
             _attachments=attachments,  # Changed from attachments
             _is_read=False   # Changed from is_read
         )
+        return message
     
     def _decode_header(self, header: str) -> str:
         """Decode email header string."""
@@ -320,16 +322,16 @@ class MockFetcher:
                 attachments.append(attachment)
             
             message = MessageImpl(
-                message_id=message_id,
-                from_=from_,
-                to=to,
-                cc="cc@example.com" if i % 2 == 0 else None,
-                bcc="bcc@example.com" if i % 3 == 0 else None,
-                date=date_str,
-                subject=subject,
-                body=body,
-                attachments=attachments,
-                is_read=False
+                _id=message_id,
+                _from=from_,
+                _to=to,
+                _cc="cc@example.com" if i % 2 == 0 else None,
+                _bcc="bcc@example.com" if i % 3 == 0 else None,
+                _date=date_str,
+                _subject=subject,
+                _body=body,
+                _attachments=attachments,
+                _is_read=False
             )
             
             messages.append(message)
@@ -362,16 +364,16 @@ def import_emails_from_json(filename: str, client: ClientImpl, folder: str = "IN
                 
                 # Create message
                 message = MessageImpl(
-                    message_id=message_data.get("id", str(uuid.uuid4())),
-                    from_=message_data["from"],
-                    to=message_data["to"],
-                    cc=message_data.get("cc"),
-                    bcc=message_data.get("bcc"),
-                    date=message_data.get("date", datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S +0000")),
-                    subject=message_data["subject"],
-                    body=message_data["body"],
-                    attachments=attachments,
-                    is_read=message_data.get("is_read", False)
+                    _id=message_data.get("id", str(uuid.uuid4())),
+                    _from=message_data["from"],
+                    _to=message_data["to"],
+                    _cc=message_data.get("cc"), 
+                    _bcc=message_data.get("bcc"),
+                    _date=message_data.get("date", datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S +0000")),
+                    _subject=message_data["subject"],
+                    _body=message_data["body"],
+                    _attachments=attachments,
+                    _is_read=message_data.get("is_read", False)
                 )
                 
                 # Add to client
