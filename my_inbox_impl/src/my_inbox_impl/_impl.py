@@ -5,12 +5,13 @@ import uuid
 import os
 import json
 from pathlib import Path
+from dataclasses import dataclass, field
 
 
 class AttachmentImpl:
     """Implementation of the Attachment protocol."""
     
-    def __init__(self, filename: str, content_type: str, content: bytes):
+    def __init__(self, filename: str, content_type: str, content: bytes) -> None:
         self._filename = filename
         self._content_type = content_type
         self._content = content
@@ -31,40 +32,30 @@ class AttachmentImpl:
         return self._content
 
 
+@dataclass
 class MessageImpl:
     """Implementation of the Message protocol."""
     
-    def __init__(self, 
-                 message_id: str,
-                 from_: str, 
-                 to: str, 
-                 subject: str, 
-                 body: str, 
-                 date: str = None,
-                 cc: str = None, 
-                 bcc: str = None, 
-                 attachments: List[AttachmentImpl] = None,
-                 is_read: bool = False):
-        self._id = message_id
-        self._from = from_
-        self._to = to
-        self._cc = cc
-        self._bcc = bcc
-        self._subject = subject
-        self._body = body
-        self._is_read = is_read
-        self._attachments = attachments or []
-        
-         # With this updated code:
-        if date is None:
+    _id: str
+    _from: str
+    _to: str
+    _subject: str
+    _body: str
+    _date: Optional[str] = None
+    _cc: Optional[str] = None
+    _bcc: Optional[str] = None
+    _attachments: List[AttachmentImpl] = field(default_factory=list)
+    _is_read: bool = False
+    
+    def __post_init__(self) -> None:
+        """Initialize date if not provided."""
+        if self._date is None:
             # Generate a date with proper timezone format
             self._date = datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S %z")
-            # If timezone formatting fails (empty %z), use this alternative
+            # If timezone formatting fails (empty %z), use alternative
             if self._date.endswith(" "):
                 self._date = datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S +0000")
-        else:
-            self._date = date
-    
+                
     @property
     def id(self) -> str:
         return self._id
@@ -149,23 +140,23 @@ class MessageImpl:
             attachments.append(attachment)
         
         return cls(
-            message_id=data["id"],
-            from_=data["from"],
-            to=data["to"],
-            cc=data.get("cc"),
-            bcc=data.get("bcc"),
-            date=data["date"],
-            subject=data["subject"],
-            body=data["body"],
-            is_read=data["is_read"],
-            attachments=attachments
+            _id=data["id"],
+            _from=data["from"],
+            _to=data["to"],
+            _cc=data.get("cc"),
+            _bcc=data.get("bcc"),
+            _date=data["date"],
+            _subject=data["subject"],
+            _body=data["body"],
+            _is_read=data["is_read"],
+            _attachments=attachments
         )
 
 
 class ClientImpl:
     """Implementation of the Client protocol with local storage."""
     
-    def __init__(self, data_dir: str = None):
+    def __init__(self, data_dir: str = None) -> None:
         """Initialize the client with optional data directory.
         
         Args:
@@ -196,7 +187,7 @@ class ClientImpl:
             folder_path = os.path.join(self._data_dir, folder)
             
             # Get all JSON files in the folder
-            message_files = [f for f in os.listdir(folder_path) 
+            message_files = [f for f in os.listdir(folder_path)
                             if f.endswith('.json') and os.path.isfile(os.path.join(folder_path, f))]
             
             for filename in message_files:
@@ -219,7 +210,6 @@ class ClientImpl:
         with open(file_path, 'w') as f:
             json.dump(message.to_dict(), f, indent=2)
     
-
     def get_messages(self, limit: Optional[int] = None, folder: str = "INBOX") -> Iterator[my_inbox_api.Message]:
         """Return an iterator of messages from the specified folder."""
         # Make sure the folder exists
@@ -227,7 +217,7 @@ class ClientImpl:
             raise ValueError(f"Folder '{folder}' does not exist")
         
         # Sort messages by date (newest first) with better error handling
-        def safe_date_key(message):
+        def safe_date_key(message) -> datetime.datetime:
             try:
                 # Try the original format first
                 return datetime.datetime.strptime(message.date, "%a, %d %b %Y %H:%M:%S %z")
@@ -251,7 +241,7 @@ class ClientImpl:
         
         for message in sorted_messages:
             yield message
-
+    
     def search_messages(self, query: str, folder: str = "INBOX") -> Iterator[my_inbox_api.Message]:
         """Search for messages that match the query in the specified folder."""
         # Make sure the folder exists
@@ -261,7 +251,7 @@ class ClientImpl:
         # Simple case-insensitive search in subject and body
         query = query.lower()
         for message in self._messages.get(folder, []):
-            if (query in message.subject.lower() or 
+            if (query in message.subject.lower() or
                 query in message.body.lower() or
                 query in message.from_.lower() or
                 query in message.to.lower()):

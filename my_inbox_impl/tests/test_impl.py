@@ -161,8 +161,6 @@ class TestInboxImplementation(unittest.TestCase):
     
     def test_mock_fetcher(self):
         """Test the MockFetcher class."""
-        from my_inbox_impl.mail_fetcher import MockFetcher
-        
         # Create a mock fetcher
         fetcher = MockFetcher()
         fetcher.set_client(self.client)

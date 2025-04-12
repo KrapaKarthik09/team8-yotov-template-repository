@@ -1,5 +1,5 @@
-"""
-Utility module for fetching emails from various sources.
+"""Utility module for fetching emails from various sources.
+
 This module provides a mechanism to fetch emails from external sources
 and add them to the local email client.
 """
@@ -23,7 +23,7 @@ from ._impl import ClientImpl, MessageImpl, AttachmentImpl
 class IMAPFetcher:
     """Class for fetching emails from an IMAP server."""
     
-    def __init__(self, host: str, username: str, password: str, port: int = 993, use_ssl: bool = True):
+    def __init__(self, host: str, username: str, password: str, port: int = 993, use_ssl: bool = True) -> None:
         """Initialize the IMAP fetcher with server details."""
         self.host = host
         self.port = port
@@ -161,9 +161,10 @@ class IMAPFetcher:
         for part, encoding in email.header.decode_header(header):
             if isinstance(part, bytes):
                 if encoding:
+                    # To:
                     try:
                         decoded_part = part.decode(encoding)
-                    except:
+                    except (UnicodeDecodeError, LookupError):
                         decoded_part = part.decode('utf-8', errors='replace')
                 else:
                     decoded_part = part.decode('utf-8', errors='replace')
@@ -245,14 +246,14 @@ class IMAPFetcher:
         try:
             self.connection.close()
             self.connection.logout()
-        except:
+        except (imaplib.IMAP4.error, ConnectionError, OSError):
             pass
 
 
 class MockFetcher:
     """Class for generating mock emails for testing purposes."""
     
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the mock fetcher."""
         self.client = None
     

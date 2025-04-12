@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Example script demonstrating basic usage of the my_inbox_impl package.
-"""
+"""Example script demonstrating basic usage of the my_inbox_impl package."""
 
 import os
 import sys
@@ -127,7 +125,7 @@ def populate_mock_data(client, count=20):
 
 
 def main():
-    """Main function to demonstrate the email client functionality."""
+    """Demonstrate the email client functionality."""
     parser = argparse.ArgumentParser(description="Email Client Demo")
     parser.add_argument("--populate", type=int, help="Populate with N mock messages")
     parser.add_argument("--list", action="store_true", help="List messages")
