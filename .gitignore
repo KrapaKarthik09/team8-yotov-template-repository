@@ -45,3 +45,4 @@ echo "*.pyc" >> .gitignore
 echo ".pytest_cache/" >> .gitignore
 echo "htmlcov/" >> .gitignore
 echo ".coverage" >> .gitignore
+.qodo

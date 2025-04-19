@@ -1,5 +1,4 @@
 import pytest
-from unittest.mock import MagicMock, patch
 from typing import Iterator, Optional, Any
 
 import my_inbox_api
@@ -10,10 +9,9 @@ TEST_MESSAGE_COUNT = 5
 TEST_LIMIT = 2
 TEST_SEARCH_RESULT_COUNTS = 2
 
-class MockAttachment(MagicMock):
+class MockAttachment:
     """Mock implementation of Attachment protocol for testing."""
-
-    # For MockAttachment class
+    
     @property
     def filename(self) -> str:
         """Return test filename."""
@@ -34,7 +32,7 @@ class MockAttachment(MagicMock):
         return b"This is test content"
 
 
-class MockMessage(MagicMock):
+class MockMessage:
     """Mock implementation of Message protocol for testing."""
 
     @property
@@ -78,7 +76,7 @@ class MockMessage(MagicMock):
         return "This is the test body."
 
     @property
-    def attachments(self) -> list[Attachment]:  # Updated type hint
+    def attachments(self) -> list[Attachment]:
         """Return MockAttachment."""
         return [MockAttachment()]
 
@@ -96,7 +94,7 @@ class MockMessage(MagicMock):
         pass
 
 
-class MockClient(MagicMock):
+class MockClient:
     """Mock implementation of Client protocol for testing."""
 
     def get_messages(self, limit: Optional[int] = None, folder: str = "INBOX") -> Iterator[Message]:
@@ -112,7 +110,7 @@ class MockClient(MagicMock):
         # Return 2 mock messages for any search
         return iter([MockMessage(), MockMessage()])
 
-    def get_folders(self) -> list[str]:  # Updated type hint
+    def get_folders(self) -> list[str]:
         """Return"""
         return ["INBOX", "Sent", "Drafts", "Trash"]
 
@@ -173,10 +171,11 @@ def test_client_interface() -> None:
     assert "INBOX" in folders
 
 
-@patch('my_inbox_api.get_client')
-def test_get_client_function(mock_get_client: MagicMock) -> None:
+def test_get_client_function(monkeypatch) -> None:
     """Test the get_client function returns a Client instance."""
-    mock_get_client.return_value = MockClient()
+    # Using monkeypatch instead of patch decorator
+    mock_client = MockClient()
+    monkeypatch.setattr(my_inbox_api, 'get_client', lambda: mock_client)
 
     client = my_inbox_api.get_client()
     assert isinstance(client.get_messages(), Iterator)
