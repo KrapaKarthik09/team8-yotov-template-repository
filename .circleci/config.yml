@@ -36,6 +36,7 @@ jobs:
           name: Run Static Analysis mypy
           command: | 
             source .venv/bin/activate
+            uv pip install mypy
             mypy my_inbox_api my_inbox_impl
       - run:
           name: Generate Coverage Reports
