@@ -43,13 +43,13 @@ class Message(Protocol):
         raise NotImplementedError()
     
     @property
-    def cc(self) -> Optional[str]:
-        """Return the CC recipients of the message, if any."""
+    def cc(self) -> list[str]:
+        """Return the CC recipients of the message. Returns empty list if none."""
         raise NotImplementedError()
     
     @property
-    def bcc(self) -> Optional[str]:
-        """Return the BCC recipients of the message, if any."""
+    def bcc(self) -> list[str]:
+        """Return the BCC recipients of the message. Returns empty list if none."""
         raise NotImplementedError()
 
     @property
@@ -68,7 +68,7 @@ class Message(Protocol):
         raise NotImplementedError()
     
     @property
-    def attachments(self) -> List[Attachment]:
+    def attachments(self) -> list[Attachment]:
         """Return a list of attachments."""
         raise NotImplementedError()
     
@@ -113,7 +113,7 @@ class Client(Protocol):
         """
         raise NotImplementedError()
     
-    def get_folders(self) -> List[str]:
+    def get_folders(self) -> list[str]:
         """Return a list of available mail folders.
         
         Returns:

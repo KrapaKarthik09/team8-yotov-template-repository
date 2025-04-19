@@ -1,8 +1,7 @@
-import unittest
+import pytest
 from unittest.mock import MagicMock, patch
 from typing import Iterator, List
 
-# Import your interface definitions
 import my_inbox_api
 from my_inbox_api import Message, Client, Attachment
 
@@ -62,7 +61,7 @@ class MockMessage(MagicMock):
         return "This is the test body."
     
     @property
-    def attachments(self) -> List[Attachment]:
+    def attachments(self) -> list[Attachment]:  # Updated type hint
         return [MockAttachment()]
     
     @property
@@ -90,75 +89,71 @@ class MockClient(MagicMock):
         # Return 2 mock messages for any search
         return iter([MockMessage(), MockMessage()])
     
-    def get_folders(self) -> List[str]:
+    def get_folders(self) -> list[str]:  # Updated type hint
         return ["INBOX", "Sent", "Drafts", "Trash"]
 
 
-class TestInboxInterface(unittest.TestCase):
-    """Test cases for the inbox client interface."""
+def test_attachment_interface():
+    """Test the Attachment protocol properties."""
+    attachment = MockAttachment()
     
-    def test_attachment_interface(self):
-        """Test the Attachment protocol properties."""
-        attachment = MockAttachment()
-        
-        # Test property types
-        self.assertIsInstance(attachment.filename, str)
-        self.assertIsInstance(attachment.content_type, str)
-        self.assertIsInstance(attachment.size, int)
-        self.assertIsInstance(attachment.get_content(), bytes)
-    
-    def test_message_interface(self):
-        """Test the Message protocol properties."""
-        message = MockMessage()
-        
-        # Test property types
-        self.assertIsInstance(message.id, str)
-        self.assertIsInstance(message.from_, str)
-        self.assertIsInstance(message.to, str)
-        self.assertIsInstance(message.cc, str)
-        self.assertIsInstance(message.bcc, str)
-        self.assertIsInstance(message.date, str)
-        self.assertIsInstance(message.subject, str)
-        self.assertIsInstance(message.body, str)
-        self.assertIsInstance(message.attachments, list)
-        self.assertIsInstance(message.is_read, bool)
-        
-        # Test attachment list contains Attachment objects
-        if message.attachments:
-            self.assertIsInstance(message.attachments[0].filename, str)
-    
-    def test_client_interface(self):
-        """Test the Client protocol methods."""
-        client = MockClient()
-        
-        # Test get_messages
-        messages = list(client.get_messages())
-        self.assertEqual(len(messages), 5)
-        self.assertIsInstance(messages[0].id, str)
-        
-        # Test get_messages with limit
-        limited_messages = list(client.get_messages(limit=2))
-        self.assertEqual(len(limited_messages), 2)
-        
-        # Test search_messages
-        search_results = list(client.search_messages("test"))
-        self.assertEqual(len(search_results), 2)
-        self.assertIsInstance(search_results[0].id, str)
-        
-        # Test get_folders
-        folders = client.get_folders()
-        self.assertIsInstance(folders, list)
-        self.assertIn("INBOX", folders)
-    
-    @patch('my_inbox_api.get_client')
-    def test_get_client_function(self, mock_get_client):
-        """Test the get_client function returns a Client instance."""
-        mock_get_client.return_value = MockClient()
-        
-        client = my_inbox_api.get_client()
-        self.assertIsInstance(client.get_messages(), Iterator)
-        self.assertIsInstance(client.get_folders(), list)
+    # Test property types
+    assert isinstance(attachment.filename, str)
+    assert isinstance(attachment.content_type, str)
+    assert isinstance(attachment.size, int)
+    assert isinstance(attachment.get_content(), bytes)
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_message_interface():
+    """Test the Message protocol properties."""
+    message = MockMessage()
+    
+    # Test property types
+    assert isinstance(message.id, str)
+    assert isinstance(message.from_, str)
+    assert isinstance(message.to, str)
+    assert isinstance(message.cc, str)
+    assert isinstance(message.bcc, str)
+    assert isinstance(message.date, str)
+    assert isinstance(message.subject, str)
+    assert isinstance(message.body, str)
+    assert isinstance(message.attachments, list)
+    assert isinstance(message.is_read, bool)
+    
+    # Test attachment list contains Attachment objects
+    if message.attachments:
+        assert isinstance(message.attachments[0].filename, str)
+
+
+def test_client_interface():
+    """Test the Client protocol methods."""
+    client = MockClient()
+    
+    # Test get_messages
+    messages = list(client.get_messages())
+    assert len(messages) == 5
+    assert isinstance(messages[0].id, str)
+    
+    # Test get_messages with limit
+    limited_messages = list(client.get_messages(limit=2))
+    assert len(limited_messages) == 2
+    
+    # Test search_messages
+    search_results = list(client.search_messages("test"))
+    assert len(search_results) == 2
+    assert isinstance(search_results[0].id, str)
+    
+    # Test get_folders
+    folders = client.get_folders()
+    assert isinstance(folders, list)
+    assert "INBOX" in folders
+
+
+@patch('my_inbox_api.get_client')
+def test_get_client_function(mock_get_client):
+    """Test the get_client function returns a Client instance."""
+    mock_get_client.return_value = MockClient()
+    
+    client = my_inbox_api.get_client()
+    assert isinstance(client.get_messages(), Iterator)
+    assert isinstance(client.get_folders(), list)
