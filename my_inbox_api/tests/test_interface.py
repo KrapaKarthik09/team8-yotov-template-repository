@@ -137,17 +137,24 @@ def test_message_interface() -> None:
     assert isinstance(message.id, str)
     assert isinstance(message.from_, str)
     assert isinstance(message.to, str)
-    assert isinstance(message.cc, str)
-    assert isinstance(message.bcc, str)
+    assert isinstance(message.cc, list)
+    assert isinstance(message.bcc, list)
     assert isinstance(message.date, str)
     assert isinstance(message.subject, str)
     assert isinstance(message.body, str)
     assert isinstance(message.attachments, list)
     assert isinstance(message.is_read, bool)
 
+    # Additional list content 
+    if message.cc:
+        assert all(isinstance(item, str) for item in message.cc)
+    if message.bcc:
+        assert all(isinstance(item, str) for item in message.bcc)
+
     # Test attachment list contains Attachment objects
     if message.attachments:
         assert isinstance(message.attachments[0].filename, str)
+
 
 
 def test_client_interface() -> None:
