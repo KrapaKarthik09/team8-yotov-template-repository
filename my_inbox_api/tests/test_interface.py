@@ -171,7 +171,7 @@ def test_client_interface() -> None:
     assert "INBOX" in folders
 
 
-def test_get_client_function(monkeypatch) -> None:
+def test_get_client_function(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test the get_client function returns a Client instance."""
     # Using monkeypatch instead of patch decorator
     mock_client = MockClient()
