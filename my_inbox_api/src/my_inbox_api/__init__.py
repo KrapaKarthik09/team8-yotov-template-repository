@@ -20,7 +20,7 @@ class Attachment(Protocol):
     def size(self) -> int:
         """Return the size of the attachment in bytes."""
         raise NotImplementedError()
-    
+
     def get_content(self) -> bytes:
         """Return the content of the attachment."""
         raise NotImplementedError()
@@ -43,12 +43,12 @@ class Message(Protocol):
     def to(self) -> str:
         """Return the recipient of the message."""
         raise NotImplementedError()
-    
+
     @property
     def cc(self) -> list[str]:
         """Return the CC recipients of the message. Returns empty list if none."""
         raise NotImplementedError()
-    
+
     @property
     def bcc(self) -> list[str]:
         """Return the BCC recipients of the message. Returns empty list if none."""
@@ -68,21 +68,21 @@ class Message(Protocol):
     def body(self) -> str:
         """Return the body of the message."""
         raise NotImplementedError()
-    
+
     @property
     def attachments(self) -> list[Attachment]:
         """Return a list of attachments."""
         raise NotImplementedError()
-    
+
     @property
     def is_read(self) -> bool:
         """Return whether the message has been read."""
         raise NotImplementedError()
-    
+
     def mark_as_read(self) -> None:
         """Mark the message as read."""
         raise NotImplementedError()
-    
+
     def mark_as_unread(self) -> None:
         """Mark the message as unread."""
         raise NotImplementedError()
@@ -93,44 +93,48 @@ class Client(Protocol):
 
     def get_messages(self, limit: Optional[int] = None, folder: str = "INBOX") -> Iterator[Message]:
         """Return an iterator of messages.
-        
+
         Args:
-            limit: Maximum number of messages to retrieve. If None, retrieves 
-    all available messages.
+            limit: Maximum number of messages to retrieve. If None, retrieves
+        all available messages.
             folder: The folder to fetch messages from. Defaults to "INBOX".
-        
+
         Returns:
             An iterator of Message objects.
+
         """
         raise NotImplementedError()
-    
+
     def search_messages(self, query: str, folder: str = "INBOX") -> Iterator[Message]:
         """Search for messages that match the query.
-        
+
         Args:
             query: The search query string.
             folder: The folder to search in. Defaults to "INBOX".
-            
+
         Returns:
             An iterator of Message objects that match the query.
+
         """
         raise NotImplementedError()
-    
+
     def get_folders(self) -> list[str]:
         """Return a list of available mail folders.
-        
+
         Returns:
             A list of folder names.
+
         """
         raise NotImplementedError()
 
 
 def get_client() -> Client:
     """Return an instance of a Mail Client.
-    
+
     This function will be overridden by the implementation module.
-    
+
     Returns:
         An instance of a Client implementation.
+
     """
     raise NotImplementedError()
