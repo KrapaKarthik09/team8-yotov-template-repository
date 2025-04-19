@@ -12,7 +12,8 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            pip install uv coverage ruff
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+            pip install coverage ruff
       - run:
           name: Create virtual environment and install packages
           command: |
