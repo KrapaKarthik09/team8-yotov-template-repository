@@ -1,5 +1,5 @@
 import pytest
-from typing import Iterator, Optional, Any
+from typing import Iterator, Optional, Protocol, Any
 
 import my_inbox_api
 from my_inbox_api import Message, Client, Attachment
@@ -51,12 +51,12 @@ class MockMessage:
         return "recipient@example.com"
 
     @property
-    def cc(self) -> str:
+    def cc(self) -> list[str]:
         """Return mailid."""
         return "cc@example.com"
 
     @property
-    def bcc(self) -> str:
+    def bcc(self) -> list[str]:
         """Return mailid."""
         return "bcc@example.com"
 
@@ -99,16 +99,19 @@ class MockClient:
 
     def get_messages(self, limit: Optional[int] = None, folder: str = "INBOX") -> Iterator[Message]:
         """Return"""
-        # Return 5 mock messages, respecting the limit if provided
-        messages = [MockMessage() for _ in range(5)]
+        
+        messages: list[Message] = [] 
+        for _ in range(5):
+            messages.append(MockMessage()) 
+
         if limit is not None:
             messages = messages[:limit]
         return iter(messages)
 
     def search_messages(self, query: str, folder: str = "INBOX") -> Iterator[Message]:
-        """Return"""
-        # Return 2 mock messages for any search
-        return iter([MockMessage(), MockMessage()])
+        """Return search results as an iterator."""
+        messages: list[Message] = [MockMessage(), MockMessage()]  # Explicitly type as Message
+        return iter(messages)
 
     def get_folders(self) -> list[str]:
         """Return"""
