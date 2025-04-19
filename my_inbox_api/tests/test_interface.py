@@ -35,42 +35,52 @@ class MockMessage(MagicMock):
     
     @property
     def id(self) -> str:
+        """Return message"""
         return "msg123"
     
     @property
     def from_(self) -> str:
+        """Return mailid"""
         return "sender@example.com"
     
     @property
     def to(self) -> str:
+        """Return mailid"""
         return "recipient@example.com"
     
     @property
     def cc(self) -> str:
+        """Return mailid"""
         return "cc@example.com"
     
     @property
     def bcc(self) -> str:
+        """Return mailid"""
         return "bcc@example.com"
     
     @property
     def date(self) -> str:
+        """Return mailid"""
         return "Mon, 01 Apr 2025 12:00:00 +0000"
     
     @property
     def subject(self) -> str:
+        """Return subject"""
         return "Test Subject"
     
     @property
     def body(self) -> str:
+        """Return body"""
         return "This is the test body."
     
     @property
     def attachments(self) -> list[Attachment]:  # Updated type hint
+        """Return MockAttachment"""
         return [MockAttachment()]
     
     @property
     def is_read(self) -> bool:
+        """Return bool"""
         return False
     
     def mark_as_read(self) -> None:
@@ -84,6 +94,7 @@ class MockClient(MagicMock):
     """Mock implementation of Client protocol for testing."""
     
     def get_messages(self, limit=None, folder="INBOX") -> Iterator[Message]:
+        """Return """
         # Return 5 mock messages, respecting the limit if provided
         messages = [MockMessage() for _ in range(5)]
         if limit is not None:
@@ -91,10 +102,12 @@ class MockClient(MagicMock):
         return iter(messages)
     
     def search_messages(self, query, folder="INBOX") -> Iterator[Message]:
+        """Return """
         # Return 2 mock messages for any search
         return iter([MockMessage(), MockMessage()])
     
     def get_folders(self) -> list[str]:  # Updated type hint
+        """Return """
         return ["INBOX", "Sent", "Drafts", "Trash"]
 
 
