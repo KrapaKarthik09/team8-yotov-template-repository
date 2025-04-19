@@ -37,6 +37,7 @@ jobs:
           command: | 
             source .venv/bin/activate
             uv pip install mypy
+            uv pip install pytest
             mypy my_inbox_api my_inbox_impl
       - run:
           name: Generate Coverage Reports
