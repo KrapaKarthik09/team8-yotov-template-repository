@@ -24,6 +24,8 @@ jobs:
           name: Run linting and formatting check with Ruff
           command: |
             source .venv/bin/activate
+            ruff check --fix .
+            ruff check --fix --show-fixes .
             ruff check .
       - run:
           name: Dir for Tests
