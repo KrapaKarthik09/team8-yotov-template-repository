@@ -25,7 +25,7 @@ jobs:
           command: |
             source .venv/bin/activate
             ruff check --fix .
-            ruff check --fix --show-fixes .
+            ruff check --fix --unsafe-fixes .
             ruff check .
       - run:
           name: Dir for Tests
