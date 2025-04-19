@@ -9,19 +9,24 @@ from my_inbox_api import Message, Client, Attachment
 class MockAttachment(MagicMock):
     """Mock implementation of Attachment protocol for testing."""
     
+    # For MockAttachment class
     @property
     def filename(self) -> str:
+        """Return test filename."""
         return "test_file.txt"
     
     @property
     def content_type(self) -> str:
+        """Return test content type."""
         return "text/plain"
     
     @property
     def size(self) -> int:
+        """Return test size in bytes."""
         return 1024
     
     def get_content(self) -> bytes:
+        """Return test content as bytes."""
         return b"This is test content"
 
 
