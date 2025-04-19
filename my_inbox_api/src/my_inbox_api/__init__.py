@@ -95,7 +95,8 @@ class Client(Protocol):
         """Return an iterator of messages.
         
         Args:
-            limit: Maximum number of messages to retrieve. If None, retrieves all available messages.
+            limit: Maximum number of messages to retrieve. If None, retrieves 
+    all available messages.
             folder: The folder to fetch messages from. Defaults to "INBOX".
         
         Returns:
