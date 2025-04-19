@@ -53,12 +53,12 @@ class MockMessage:
     @property
     def cc(self) -> list[str]:
         """Return mailid."""
-        return "cc@example.com"
+        return ["cc@example.com"]
 
     @property
     def bcc(self) -> list[str]:
         """Return mailid."""
-        return "bcc@example.com"
+        return ["bcc@example.com"]
 
     @property
     def date(self) -> str:
