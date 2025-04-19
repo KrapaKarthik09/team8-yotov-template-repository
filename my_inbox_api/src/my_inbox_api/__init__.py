@@ -1,3 +1,5 @@
+"""My Inbox API provides interface definitions for an email inbox client."""
+
 from typing import Iterator, Protocol, Optional, List
 
 
