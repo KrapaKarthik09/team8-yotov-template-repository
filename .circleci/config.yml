@@ -10,10 +10,14 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install dependencies
+          name: Install uv
           command: |
             curl -LsSf https://astral.sh/uv/install.sh | sh
             uv sync
+            uv pip install -e 
+      - run:
+          name: Install dependencies
+          command: |
             uv pip install coverage ruff
       - run:
           name: Create virtual environment and install packages
