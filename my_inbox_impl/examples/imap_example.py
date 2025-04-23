@@ -24,7 +24,7 @@ def main():
     
     # Gmail credentials
     username = os.environ.get("GMAIL_ADDRESS") or "prathamsaraf007@gmail.com"
-    password = os.environ.get("GMAIL_APP_PASSWORD") or "twcf dzwz aqot dfnr"
+    password = os.environ.get("GMAIL_APP_PASSWORD") or "use_your_own_key_here"
     
     print(f"Using Gmail account: {username}")
     
