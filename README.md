@@ -1,213 +1,216 @@
-# Team 8 : Mailing Interface 
+# MyInbox: Email Interface API
 
-# Description
+## Overview
 
-This repository contains the API definitions and a placeholder implementation for an email inbox client. It utilizes Python `Protocol` classes to define standardized interfaces for email messages, attachments, and the inbox client itself.
+MyInbox is a modular Python library providing a clean, standardized interface for email client operations. It implements a protocol-based approach for email handling, allowing different backend implementations to share a common interface.
 
-### Scope
+## Project Structure
 
-This project defines an interface for an inbox client with the following capabilities:
+```
+.
+├── my_inbox_api/            # API protocol definitions
+│   ├── src/
+│   │   └── my_inbox_api/    # Protocol interfaces
+│   └── tests/               # API tests
+├── my_inbox_impl/           # Reference implementation
+│   ├── src/
+│   │   └── my_inbox_impl/   # Implementation classes
+│   ├── examples/            # Usage examples
+│   └── tests/               # Implementation tests
+├── .circleci/               # CI/CD configuration
+├── .github/                 # GitHub templates
+├── .gitignore               # Git ignore patterns
+├── pyproject.toml           # Project configuration
+└── README.md                # This file
+```
 
-#### In Scope:
+## Features
 
-* Basic email message retrieval.
-* Email folder/label support.
-* Message search functionality.
-* Attachment handling.
-* Message read/unread status management.
+- **Protocol-based design**: Clearly defined interfaces for messages, attachments, and client operations
+- **Modular architecture**: Separates API from implementation for better maintainability
+- **IMAP support**: Connect to email providers like Gmail via IMAP
+- **Folder management**: Access and manage email folders/labels
+- **Message operations**: Retrieve, search, and manage message read/unread status
+- **Attachment handling**: Access and manipulate email attachments
+- **Soft-delete**: Messages are moved to Trash instead of permanently deleted
+- **Local storage**: Messages are stored locally for offline access
 
-#### Out of Scope:
+## Installation
 
-* Message composition and sending.
-* Complex filtering rules.
-* Server-side folder management.
-* Account setup and configuration.
-* Security features beyond basic authentication.
+1. **Prerequisites**:
+   - Python 3.12 or higher
+   - UV package manager
 
-### API Protocols and Methods
+2. **Install UV** (if not already installed):
+   ```bash
+   curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
 
-The API defines the following protocols and their methods/properties:
+3. **Install the package**:
+   ```bash
+   uv sync --all-packages
+   ```
 
-**`Attachment` Protocol:**
+## API Protocols and Methods
 
-| Property       | Return Type | Description                             |
-| :------------- | :---------- | :-------------------------------------- |
-| `filename`     | `str`       | The filename of the attachment.         |
-| `content_type` | `str`       | The content type of the attachment.     |
-| `size`         | `int`       | The size of the attachment in bytes.    |
-| `get_content()`| `bytes`     | Returns the content of the attachment. |
+### `Attachment` Protocol:
 
-**`Message` Protocol:**
+| Property       | Return Type | Description                           |
+| :------------- | :---------- | :------------------------------------ |
+| `filename`     | `str`       | The filename of the attachment        |
+| `content_type` | `str`       | The content type of the attachment    |
+| `size`         | `int`       | The size of the attachment in bytes   |
+| `get_content()`| `bytes`     | Returns the content of the attachment |
 
-| Property/Method    | Return Type        | Description                                  |
-| :----------------- | :----------------- | :------------------------------------------- |
-| `id`               | `str`              | The unique identifier of the message.        |
-| `from_`            | `str`              | The sender of the message.                   |
-| `to`               | `str`              | The recipient of the message.                |
-| `cc`               | `Optional[str]`    | The CC recipients of the message, if any.    |
-| `bcc`              | `Optional[str]`    | The BCC recipients of the message, if any.   |
-| `date`             | `str`              | The date of the message.                     |
-| `subject`          | `str`              | The subject of the message.                  |
-| `body`             | `str`              | The body of the message.                     |
-| `attachments`      | `List[Attachment]` | A list of attachments.                       |
-| `is_read`          | `bool`             | Whether the message has been read.           |
-| `mark_as_read()`   | `None`             | Marks the message as read.                   |
-| `mark_as_unread()` | `None`             | Marks the message as unread.                 |
+### `Message` Protocol:
 
-**`Client` Protocol:**
+| Property/Method    | Return Type        | Description                                |
+| :----------------- | :----------------- | :----------------------------------------- |
+| `id`               | `str`              | The unique identifier of the message       |
+| `from_`            | `str`              | The sender of the message                  |
+| `to`               | `str`              | The recipient of the message               |
+| `cc`               | `str | None`       | The CC recipients (if any)                 |
+| `bcc`              | `str | None`       | The BCC recipients (if any)                |
+| `date`             | `str`              | The date of the message                    |
+| `subject`          | `str`              | The subject of the message                 |
+| `body`             | `str`              | The body of the message                    |
+| `attachments`      | `List[Attachment]` | A list of attachments                      |
+| `is_read`          | `bool`             | Whether the message has been read          |
+| `mark_as_read()`   | `None`             | Marks the message as read                  |
+| `mark_as_unread()` | `None`             | Marks the message as unread                |
 
-| Method                             | Parameters                               | Return Type         | Description                                       |
-| :--------------------------------- | :--------------------------------------- | :------------------ | :------------------------------------------------ |
-| `get_messages(limit, folder)`      | `limit: Optional[int]`, `folder: str`  | `Iterator[Message]` | Fetches messages from a specified folder.         |
-| `search_messages(query, folder)`   | `query: str`, `folder: str`              | `Iterator[Message]` | Searches for messages matching the query.         |
-| `get_folders()`                    | None                                     | `List[str]`         | Returns a list of available mail folders.         |
+### `Client` Protocol:
 
-**Helper Function:**
+| Method                             | Parameters                               | Return Type         | Description                                     |
+| :--------------------------------- | :--------------------------------------- | :------------------ | :---------------------------------------------- |
+| `get_messages(limit, folder)`      | `limit: int | None`, `folder: str`       | `Iterator[Message]` | Fetches messages from a specified folder        |
+| `search_messages(query, folder)`   | `query: str`, `folder: str`              | `Iterator[Message]` | Searches for messages matching the query        |
+| `get_folders()`                    | None                                     | `List[str]`         | Returns a list of available mail folders        |
+
+### Helper Function:
 
 | Function      | Return Type | Description                                    |
-| :------------ | :---------- | :--------------------------------------------- |
-| `get_client()`| `Client`    | Returns an instance of a mail client implementation. |
+| :------------ | :---------- | :----------------------------------------------|
+| `get_client()`| `Client`    | Returns an instance of a mail client implementation |
 
-### Usage
+## Usage Examples
 
-*(Note: The implementation details in `my_inbox_impl` are currently placeholders. The following examples illustrate how the API is intended to be used once implemented, based on the API definition and test structure.)*
-
-#### Getting a Client Instance
+### Basic Usage
 
 ```python
 import my_inbox_api
 
-# This function will be provided by the implementation package
+# Get a client instance
 client = my_inbox_api.get_client()
 
-# Listing Folders
-folders = client.get_folders() 
-print("Available folders:", folders) 
+# List available folders
+folders = client.get_folders()
+print("Available folders:", folders)
 
-# Reading Messages
-# Get top 10 messages from INBOX
-messages = client.get_messages(folder="INBOX", limit=10)
-for message in messages: 
-    print(f"From: {message.from_}") 
-    print(f"Subject: {message.subject}") 
-    print(f"Read Status: {message.is_read}") 
+# Get messages from inbox
+for message in client.get_messages(folder="INBOX", limit=5):
+    print(f"From: {message.from_}")
+    print(f"Subject: {message.subject}")
+    print(f"Read: {message.is_read}")
+    print("-" * 50)
 
-# Searching Messages
-search_results = client.search_messages(query="important project", folder="INBOX")
-for message in search_results: 
-    print(f"Found matching message: {message.subject}") 
-
+# Search for messages
+results = client.search_messages("important", folder="INBOX")
+for message in results:
+    print(f"Found: {message.subject}")
 ```
 
-## Directory Structure
+### Gmail Integration
 
+The library includes examples for connecting to Gmail using IMAP:
+
+```python
+from my_inbox_impl import get_client
+from my_inbox_impl.mail_fetcher import IMAPFetcher
+
+# Create client
+client = get_client()
+
+# Connect to Gmail
+fetcher = IMAPFetcher(
+    host="imap.gmail.com",
+    port=993,
+    username="your-email@gmail.com",
+    password="your-app-password"  # Generate this in Gmail account settings
+)
+
+# Set client
+fetcher.set_client(client)
+
+# Fetch messages
+fetched = fetcher.fetch_messages(folder="INBOX", limit=10)
+print(f"Fetched {len(fetched)} messages")
+
+# Display messages
+for idx, message in enumerate(client.get_messages(limit=10), 1):
+    print(f"{idx}. From: {message.from_}")
+    print(f"   Subject: {message.subject}")
 ```
-.
-├── src/                    # Source code directory
-│   ├── calculator/         # Calculator component
-│   │   ├── calculator.py   # Implementation
-│   │   ├── __init__.py     # Component API
-│   │   ├── pyproject.toml  # Component dependencies
-│   │   └── tests/          # Component unit tests
-│   ├── logger/             # Logger component
-│   │   └── ...
-│   ├── notifier/           # Notifier component
-│   │   └── ...
-│   └── __init__.py         # Package exports
-|
-├── .circleci/              # CircleCI configuration
-├── .github/                # GitHub templates
-│   ├── ISSUE_TEMPLATE/     # Issue templates
-│   │   ├── bug_report.md   # Bug report template
-│   │   └── feature_request.md  # Feature request template
-│   └── pull_request_template.md
-├── pyproject.toml          # Project configuration
-├── component.md            # Component documentation
-├── LICENSE                 # Open source license (MIT)
-├── .gitignore              # Python-specific gitignore
-└── README.md               # This file
 
-## Getting Started
+Check the `examples/` directory for more comprehensive examples.
 
-### Prerequisites
-
-- Python 3.11 or higher
-- UV package manager
-
-### Installation
-
-1. Install UV (if not already installed):
-   ```bash
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-
-2. Clone this template:
-   ```bash
-   git clone https://github.com/yourusername/team8-yotov-template-repository.git
-   cd team8-yotov-template-repository
-   ```
-
-3. Install dependencies:
-   ```bash
-   uv sync
-   uv pip install -e .
-   ```
+## Development
 
 ### Running Tests
 
-#### Run all tests:
+Use pytest to run the test suite:
+
 ```bash
 uv run pytest
 ```
 
-#### Run a specific component's unit tests:
-```bash
-uv run pytest my_inbox_api/tests/
-```
+Run tests with coverage:
 
-
-#### Run tests with coverage:
 ```bash
-uv run pytest --cov=src
+uv run coverage run -m pytest
+uv run coverage report
 ```
 
 ### Code Quality
 
-#### Run linting with Ruff:
+Run linting with Ruff:
+
 ```bash
 uv run ruff check .
 ```
 
-#### Run type checking with MyPy:
+Apply auto-fixes where possible:
+
 ```bash
-uv run mypy src tests
+uv run ruff check --fix .
 ```
 
-## CI/CD Pipeline
+## CI/CD
 
-This template is configured with CircleCI for continuous integration. The pipeline:
+This project uses CircleCI for continuous integration. The pipeline:
 
 1. Installs dependencies
-2. Runs linting with ruff
-3. Runs type checking with mypy
-4. Runs all tests with pytest
-5. Generates code coverage reports
+2. Runs linting with Ruff
+3. Runs all tests with pytest
+4. Generates code coverage reports
 
-## Components
+## Contributing
 
-This template includes two components:
+Contributions are welcome! Follow these steps:
 
-1. **my_inbox_api** : Inbox API
-2. **my_inbox_impl**: Inbox Implemenation
-
-For detailed information about the component architecture, see [component.md](./component.md).
-
-## Templates
-
-GitHub templates are included to standardize:
-- Pull requests
-- Bug reports
-- Feature requests
+1. Check the issue tracker for open issues or create a new one
+2. Fork the repository
+3. Create a new branch for your feature or bugfix
+4. Write tests for your changes
+5. Make your changes
+6. Run the tests and linting to ensure everything passes
+7. Submit a pull request
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- This project was developed as part of a collaborative effort at NYU OSSPD
+- Thanks to all the contributors who have helped improve this codebase
