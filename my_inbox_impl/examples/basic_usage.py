@@ -86,7 +86,7 @@ def view_message(client, message_id, folder="INBOX"):
         for idx, attachment in enumerate(message.attachments, 1):
             print(f"  {idx}. {attachment.filename} ({attachment.content_type}, {attachment.size} bytes)")
     
-    print("\n" + "=" * 60)  
+    print("\n" + "=" * 60)
 
 
 def search_messages(client, query, folder="INBOX"):

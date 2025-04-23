@@ -35,7 +35,7 @@ class MessageImpl:
     """Implementation of the Message protocol."""
     
     def __init__(
-        self, 
+        self,
         _id: str,
         _from: str,
         _to: str,
@@ -355,7 +355,7 @@ class ClientImpl:
     def delete_message(self, message_id: str, folder: str) -> bool:
         """Delete a message from the specified folder.
         
-        If the folder is not 'Trash', the message is moved to the Trash folder 
+        If the folder is not 'Trash', the message is moved to the Trash folder
         instead of being permanently deleted. Messages in the Trash folder are
         permanently deleted.
         

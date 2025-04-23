@@ -12,14 +12,14 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            pip install uv coverage ruff
+            pip install uv
+            uv sync --all-packages
       - run:
           name: Create virtual environment and install packages
           command: |
             uv venv
             source .venv/bin/activate
             uv pip install -e my_inbox_api
-            uv pip install coverage ruff
       - run:
           name: Run linting and formatting check with Ruff
           command: |

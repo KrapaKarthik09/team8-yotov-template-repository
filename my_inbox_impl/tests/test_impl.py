@@ -74,15 +74,15 @@ def test_message_implementation():
     assert message.date == "Mon, 01 Apr 2025 12:00:00 +0000"
     assert message.subject == "Test Subject"
     assert message.body == "Test body content"
-    assert message.is_read == False
+    assert message.is_read is False
     assert len(message.attachments) == 0
     
     # Test mark_as_read and mark_as_unread
     message.mark_as_read()
-    assert message.is_read == True
+    assert message.is_read is True
     
     message.mark_as_unread()
-    assert message.is_read == False
+    assert message.is_read is False
     
     # Test message with attachments
     test_attachment = AttachmentImpl(
