@@ -10,40 +10,34 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install dependencies
+          name: Install uv
           command: |
-            pip install uv
-            uv sync --all-packages
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+            echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
+            source $BASH_ENV
       - run:
-          name: Create virtual environment and install packages
+          name: Run tests with installed packages
           command: |
             uv venv
             source .venv/bin/activate
+            
+            # Install packages individually to avoid project-level build issues
             uv pip install -e my_inbox_api
-      - run:
-          name: Run linting and formatting check with Ruff
-          command: |
-            source .venv/bin/activate
+            uv pip install -e my_inbox_impl
+            uv pip install coverage ruff pytest
+            
+            # Run linting
             ruff check --fix --unsafe-fixes .
             ruff check .
-      - run:
-          name: Dir for Tests
-          command: | 
-            source .venv/bin/activate
+            
+            # Create directory for test results
             mkdir -p test-results
-      # - run:
-      #     name: Run Static Analysis mypy
-      #     command: | 
-      #       source .venv/bin/activate
-      #       mypy my_inbox_api my_inbox_impl
-      - run:
-          name: Generate Coverage Reports
-          command: |
-            source .venv/bin/activate
+            
+            # Run tests and generate coverage reports
             coverage run -m pytest my_inbox_api/tests/ --junitxml=test-results/junit.xml
             coverage report --fail-under=90 
-            coverage xml #Generate XML report
-            coverage json -o test-results/coverage.json #Generate JSON report
+            coverage xml
+            coverage json -o test-results/coverage.json
       - store_test_results:
           path: test-results
       - store_artifacts: 
