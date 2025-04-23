@@ -49,38 +49,44 @@ def list_messages(client, folder="INBOX", limit=10):
 
 
 def view_message(client, message_id, folder="INBOX"):
-    """View the content of a specific message."""
-    # Find the message in the folder
-    found = False
-    for message in client.get_messages(folder=folder):
-        if message.id == message_id:
-            found = True
-            
-            # Mark as read
-            message.mark_as_read()
-            
-            # Display message
-            print("\n" + "=" * 60)
-            print(f"From: {message.from_}")
-            print(f"To: {message.to}")
-            if message.cc:
-                print(f"CC: {message.cc}")
-            print(f"Date: {message.date}")
-            print(f"Subject: {message.subject}")
-            print("=" * 60)
-            print(f"\n{message.body}\n")
-            
-            # Show attachments if any
-            if message.attachments:
-                print("\nAttachments:")
-                for idx, attachment in enumerate(message.attachments, 1):
-                    print(f"  {idx}. {attachment.filename} ({attachment.content_type}, {attachment.size} bytes)")
-            
-            print("\n" + "=" * 60)
-            break
+    """View the content of a specific message.
     
-    if not found:
+    Args:
+        client: Email client instance
+        message_id: ID of the message to view
+        folder: Folder containing the message (default: INBOX)
+    """
+    # Search for message by ID (optimize by using ID-based search)
+    search_results = list(client.search_messages(message_id, folder))
+    
+    if not search_results:
         print(f"Message with ID {message_id} not found in {folder}")
+        return
+    
+    # Get the first matching message
+    message = search_results[0]
+    
+    # Mark as read
+    message.mark_as_read()
+    
+    # Display message
+    print("\n" + "=" * 60)
+    print(f"From: {message.from_}")
+    print(f"To: {message.to}")
+    if message.cc:
+        print(f"CC: {message.cc}")
+    print(f"Date: {message.date}")
+    print(f"Subject: {message.subject}")
+    print("=" * 60)
+    print(f"\n{message.body}\n")
+    
+    # Show attachments if any
+    if message.attachments:
+        print("\nAttachments:")
+        for idx, attachment in enumerate(message.attachments, 1):
+            print(f"  {idx}. {attachment.filename} ({attachment.content_type}, {attachment.size} bytes)")
+    
+    print("\n" + "=" * 60)  
 
 
 def search_messages(client, query, folder="INBOX"):

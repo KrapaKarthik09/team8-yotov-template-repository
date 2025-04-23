@@ -1,4 +1,4 @@
-from typing import Iterator, Protocol, Optional, List
+from typing import Iterator, Protocol, List
 
 
 class Attachment(Protocol):
@@ -43,12 +43,12 @@ class Message(Protocol):
         raise NotImplementedError()
     
     @property
-    def cc(self) -> Optional[str]:
+    def cc(self) -> str | None:
         """Return the CC recipients of the message, if any."""
         raise NotImplementedError()
     
     @property
-    def bcc(self) -> Optional[str]:
+    def bcc(self) -> str | None:
         """Return the BCC recipients of the message, if any."""
         raise NotImplementedError()
 
@@ -89,7 +89,7 @@ class Message(Protocol):
 class Client(Protocol):
     """A Mail Client used to fetch and manage messages."""
 
-    def get_messages(self, limit: Optional[int] = None, folder: str = "INBOX") -> Iterator[Message]:
+    def get_messages(self, limit: int | None = None, folder: str = "INBOX") -> Iterator[Message]:
         """Return an iterator of messages.
         
         Args:

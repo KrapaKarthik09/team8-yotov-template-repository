@@ -1,4 +1,4 @@
-CODE COLLECTION GENERATED ON 2025-04-12 16:56:01
+CODE COLLECTION GENERATED ON 2025-04-23 00:09:43
 Root directory: C:\Users\prath\Desktop\del1\team8-yotov-template-repository
 ================================================================================
 
@@ -84,6 +84,62 @@ repos:
     rev: v0.0.241
     hooks:
       - id: ruff
+
+================================================================================
+
+FILE: basic_demo.py
+LINES: 49
+--------------------------------------------------------------------------------
+
+from my_inbox_impl import get_client
+from my_inbox_impl.mail_fetcher import MockFetcher
+
+# Get client instance
+client = get_client()
+
+# Create a mock fetcher and generate some test messages
+fetcher = MockFetcher()
+fetcher.set_client(client)
+fetcher.fetch_messages(count=15)
+
+# List folders
+print("\nAvailable folders:")
+for folder in client.get_folders():
+    print(f"  - {folder}")
+
+# List messages in inbox
+print("\nMessages in INBOX:")
+for idx, message in enumerate(client.get_messages(folder="INBOX", limit=5), 1):
+    print(f"{idx}. From: {message.from_}")
+    print(f"   Subject: {message.subject}")
+    print(f"   Date: {message.date}")
+    print(f"   Read: {message.is_read}")
+    print("-" * 50)
+
+# Search for messages
+search_term = "important"
+print(f"\nSearching for '{search_term}':")
+for message in client.search_messages(search_term):
+    print(f"  Match: {message.subject}")
+
+# Test read/unread functionality
+if list(client.get_messages()):
+    message = next(client.get_messages())
+    print(f"\nTesting read/unread status for message: {message.subject}")
+    print(f"  Initially read: {message.is_read}")
+    message.mark_as_read()
+    print(f"  After marking read: {message.is_read}")
+    message.mark_as_unread()
+    print(f"  After marking unread: {message.is_read}")
+
+# Test message with attachments
+for message in client.get_messages():
+    if message.attachments:
+        print(f"\nMessage with attachments: {message.subject}")
+        for idx, attachment in enumerate(message.attachments, 1):
+            print(f"  Attachment {idx}: {attachment.filename} ({attachment.content_type})")
+            print(f"  Size: {attachment.size} bytes")
+        break
 
 ================================================================================
 
@@ -224,10 +280,287 @@ if __name__ == "__main__":
 ================================================================================
 
 FILE: file_collection.txt
-LINES: 1
+LINES: 278
 --------------------------------------------------------------------------------
 
+CODE COLLECTION GENERATED ON 2025-04-23 00:09:43
+Root directory: C:\Users\prath\Desktop\del1\team8-yotov-template-repository
+================================================================================
 
+FILE: .coveragerc
+LINES: 12
+--------------------------------------------------------------------------------
+
+[run]
+source = my_inbox_api
+omit = my_inbox_api/tests/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    pass
+    raise ImportError
+
+================================================================================
+
+FILE: .gitignore
+LINES: 47
+--------------------------------------------------------------------------------
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pdb
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+
+# Virtual Environment
+venv/
+.env
+.venv
+
+# IDEs
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+.coveragerc
+
+#ruff
+.ruff_cache
+
+# mypy
+.mypy_cache/
+
+echo "__pycache__/" >> .gitignore
+echo "*.pyc" >> .gitignore
+echo ".pytest_cache/" >> .gitignore
+echo "htmlcov/" >> .gitignore
+echo ".coverage" >> .gitignore
+
+================================================================================
+
+FILE: .pre-commit-config.yaml
+LINES: 5
+--------------------------------------------------------------------------------
+
+repos:
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.0.241
+    hooks:
+      - id: ruff
+
+================================================================================
+
+FILE: basic_demo.py
+LINES: 49
+--------------------------------------------------------------------------------
+
+from my_inbox_impl import get_client
+from my_inbox_impl.mail_fetcher import MockFetcher
+
+# Get client instance
+client = get_client()
+
+# Create a mock fetcher and generate some test messages
+fetcher = MockFetcher()
+fetcher.set_client(client)
+fetcher.fetch_messages(count=15)
+
+# List folders
+print("\nAvailable folders:")
+for folder in client.get_folders():
+    print(f"  - {folder}")
+
+# List messages in inbox
+print("\nMessages in INBOX:")
+for idx, message in enumerate(client.get_messages(folder="INBOX", limit=5), 1):
+    print(f"{idx}. From: {message.from_}")
+    print(f"   Subject: {message.subject}")
+    print(f"   Date: {message.date}")
+    print(f"   Read: {message.is_read}")
+    print("-" * 50)
+
+# Search for messages
+search_term = "important"
+print(f"\nSearching for '{search_term}':")
+for message in client.search_messages(search_term):
+    print(f"  Match: {message.subject}")
+
+# Test read/unread functionality
+if list(client.get_messages()):
+    message = next(client.get_messages())
+    print(f"\nTesting read/unread status for message: {message.subject}")
+    print(f"  Initially read: {message.is_read}")
+    message.mark_as_read()
+    print(f"  After marking read: {message.is_read}")
+    message.mark_as_unread()
+    print(f"  After marking unread: {message.is_read}")
+
+# Test message with attachments
+for message in client.get_messages():
+    if message.attachments:
+        print(f"\nMessage with attachments: {message.subject}")
+        for idx, attachment in enumerate(message.attachments, 1):
+            print(f"  Attachment {idx}: {attachment.filename} ({attachment.content_type})")
+            print(f"  Size: {attachment.size} bytes")
+        break
+
+================================================================================
+
+FILE: collector.py
+LINES: 129
+--------------------------------------------------------------------------------
+
+#!/usr/bin/env python3
+"""
+File Collector Script
+
+This script recursively searches through directories starting from the current directory,
+finds all files (excluding specified binary/media formats), and collects their content into 
+a single text file with file paths and separators for better readability.
+"""
+
+import os
+import argparse
+from datetime import datetime
+
+
+def collect_code(root_dir='.', output_file='code_collection.txt', exclude_extensions=None, ignore_dirs=None):
+    """
+    Recursively collect all files into a single text file.
+    
+    Args:
+        root_dir (str): Root directory to start the search from
+        output_file (str): Name of the output file
+        exclude_extensions (list): List of file extensions to exclude (e.g., ['.pyc', '.exe'])
+        ignore_dirs (list): List of directory names to ignore (e.g., ['node_modules', '.git'])
+    """
+    if exclude_extensions is None:
+        # Default extensions to exclude - typically binary or temporary files
+        exclude_extensions = [
+            '.pyc', '.pyo', '.pyd', '.exe', '.dll', '.so', '.o', '.obj',
+            '.class', '.jar', '.war', '.ear', '.zip', '.tar', '.gz', '.7z',
+            '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.svg', '.mp3',
+            '.mp4', '.avi', '.mov', '.flv', '.wmv', '.pdf', '.doc', '.docx',
+            '.xls', '.xlsx', '.ppt', '.pptx'
+        ]
+    
+    if ignore_dirs is None:
+        # Default directories to ignore - add or remove based on your needs
+        ignore_dirs = ['.git', 'node_modules', 'venv', '__pycache__', 'dist', 'build']
+    
+    # Convert exclude_extensions to lowercase for case-insensitive matching
+    exclude_extensions = [ext.lower() for ext in exclude_extensions]
+    
+    # Get absolute path of root directory
+    root_dir = os.path.abspath(root_dir)
+    
+    print(f"Starting code collection from {root_dir}")
+    print(f"Excluding extensions: {', '.join(exclude_extensions)}")
+    print(f"Ignoring directories: {', '.join(ignore_dirs)}")
+    
+    # Total counters
+    total_files = 0
+    total_lines = 0
+    
+    with open(output_file, 'w', encoding='utf-8') as outfile:
+        # Write header
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        outfile.write(f"CODE COLLECTION GENERATED ON {timestamp}\n")
+        outfile.write(f"Root directory: {root_dir}\n")
+        outfile.write("=" * 80 + "\n\n")
+        
+        # Walk through directory tree
+        for dirpath, dirnames, filenames in os.walk(root_dir):
+            # Remove ignored directories from dirnames to prevent walking into them
+            # Using slice assignment to modify dirnames in-place (required by os.walk)
+            dirnames[:] = [d for d in dirnames if d not in ignore_dirs]
+            
+            for filename in filenames:
+                # Check if the file does not have one of the excluded extensions
+                file_ext = os.path.splitext(filename)[1].lower()
+                if file_ext not in exclude_extensions:
+                    file_path = os.path.join(dirpath, filename)
+                    rel_path = os.path.relpath(file_path, root_dir)
+                    
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as infile:
+                            content = infile.read()
+                            
+                            # Count lines
+                            line_count = content.count('\n') + (0 if content.endswith('\n') else 1)
+                            total_lines += line_count
+                            total_files += 1
+                            
+                            # Write file info and content to output file
+                            outfile.write(f"FILE: {rel_path}\n")
+                            outfile.write(f"LINES: {line_count}\n")
+                            outfile.write("-" * 80 + "\n\n")
+                            outfile.write(content)
+                            outfile.write("\n\n")
+                            outfile.write("=" * 80 + "\n\n")
+                            
+                            print(f"Added: {rel_path} ({line_count} lines)")
+                    except Exception as e:
+                        print(f"Error reading {rel_path}: {e}")
+    
+    # Write summary at the end of the file
+    with open(output_file, 'a', encoding='utf-8') as outfile:
+        outfile.write(f"\nSUMMARY\n")
+        outfile.write(f"Total files processed: {total_files}\n")
+        outfile.write(f"Total lines of code: {total_lines}\n")
+    
+    print(f"\nCollection complete!")
+    print(f"Processed {total_files} files with {total_lines} lines of code")
+    print(f"Output saved to: {os.path.abspath(output_file)}")
+
+
+def main():
+    """Parse command line arguments and run the script."""
+    parser = argparse.ArgumentParser(description='Collect all files into a single text file.')
+    parser.add_argument('-d', '--directory', default='.', help='Root directory to start from (default: current directory)')
+    parser.add_argument('-o', '--output', default='file_collection.txt', help='Output file name (default: file_collection.txt)')
+    parser.add_argument('-e', '--exclude', nargs='+', help='File extensions to exclude (e.g., .exe .jpg)')
+    parser.add_argument('-i', '--ignore', nargs='+', help='Directories to ignore (e.g., node_modules .git)')
+    
+    args = parser.parse_args()
+    
+    # Convert exclude extensions from command line to proper format with leading dot
+    exclude_extensions = None
+    if args.exclude:
+        exclude_extensions = [ext if ext.startswith('.') else f'.{ext}' for ext in args.exclude]
+    
+    collect_code(
+        root_dir=args.directory,
+        output_file=args.output,
+        exclude_extensions=exclude_extensions,
+        ignore_dirs=args.ignore
+    )
+
+
+if __name__ == "__main__":
+    main()
 
 ================================================================================
 
@@ -1016,7 +1349,7 @@ wheels = [
 ================================================================================
 
 FILE: .circleci\config.yml
-LINES: 57
+LINES: 58
 --------------------------------------------------------------------------------
 
 version: 2.1
@@ -1045,17 +1378,18 @@ jobs:
           name: Run linting and formatting check with Ruff
           command: |
             source .venv/bin/activate
+            ruff check --fix --unsafe-fixes .
             ruff check .
       - run:
           name: Dir for Tests
           command: | 
             source .venv/bin/activate
             mkdir -p test-results
-      - run:
-          name: Run Static Analysis mypy
-          command: | 
-            source .venv/bin/activate
-            mypy my_inbox_api my_inbox_impl
+      # - run:
+      #     name: Run Static Analysis mypy
+      #     command: | 
+      #       source .venv/bin/activate
+      #       mypy my_inbox_api my_inbox_impl
       - run:
           name: Generate Coverage Reports
           command: |
@@ -1615,34 +1949,1159 @@ testpaths = ["tests"]
 
 ================================================================================
 
-FILE: my_inbox_impl\src\my_inbox_impl\_impl.py
-LINES: 20
+FILE: my_inbox_impl\setup.py
+LINES: 13
 --------------------------------------------------------------------------------
 
-# This is just a placeholder to show structure
-# Actual implementation will be developed later
+from setuptools import setup, find_packages
 
+setup(
+    name="my-inbox-impl",
+    version="0.1.0",
+    description="Implementation of the my-inbox-api interface",
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    install_requires=[
+        "my-inbox-api",
+    ],
+    python_requires=">=3.12",
+)
+
+================================================================================
+
+FILE: my_inbox_impl\examples\basic_usage.py
+LINES: 163
+--------------------------------------------------------------------------------
+
+#!/usr/bin/env python3
+"""Example script demonstrating basic usage of the my_inbox_impl package."""
+
+import os
+import sys
+import argparse
+from pathlib import Path
+
+# Add parent directory to sys.path if running as a script
+if __name__ == "__main__":
+    parent_dir = str(Path(__file__).resolve().parent.parent)
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
+
+from my_inbox_impl import get_client
+from my_inbox_impl.mail_fetcher import MockFetcher
+
+
+def list_folders(client):
+    """List all available folders."""
+    folders = client.get_folders()
+    print("\nAvailable folders:")
+    for folder in folders:
+        print(f"  - {folder}")
+    print()
+
+
+def list_messages(client, folder="INBOX", limit=10):
+    """List messages in the specified folder."""
+    print(f"\nMessages in {folder}:")
+    print("-" * 60)
+    
+    messages = list(client.get_messages(folder=folder, limit=limit))
+    
+    if not messages:
+        print("No messages found.")
+        return
+    
+    for idx, message in enumerate(messages, 1):
+        read_status = "Read" if message.is_read else "Unread"
+        attachment_count = len(message.attachments)
+        attachment_info = f" [{attachment_count} attachments]" if attachment_count > 0 else ""
+        
+        print(f"{idx}. [{read_status}] From: {message.from_}")
+        print(f"   Subject: {message.subject}{attachment_info}")
+        print(f"   Date: {message.date}")
+        print(f"   ID: {message.id}")
+        print("-" * 60)
+
+
+def view_message(client, message_id, folder="INBOX"):
+    """View the content of a specific message."""
+    # Find the message in the folder
+    found = False
+    for message in client.get_messages(folder=folder):
+        if message.id == message_id:
+            found = True
+            
+            # Mark as read
+            message.mark_as_read()
+            
+            # Display message
+            print("\n" + "=" * 60)
+            print(f"From: {message.from_}")
+            print(f"To: {message.to}")
+            if message.cc:
+                print(f"CC: {message.cc}")
+            print(f"Date: {message.date}")
+            print(f"Subject: {message.subject}")
+            print("=" * 60)
+            print(f"\n{message.body}\n")
+            
+            # Show attachments if any
+            if message.attachments:
+                print("\nAttachments:")
+                for idx, attachment in enumerate(message.attachments, 1):
+                    print(f"  {idx}. {attachment.filename} ({attachment.content_type}, {attachment.size} bytes)")
+            
+            print("\n" + "=" * 60)
+            break
+    
+    if not found:
+        print(f"Message with ID {message_id} not found in {folder}")
+
+
+def search_messages(client, query, folder="INBOX"):
+    """Search for messages matching the query."""
+    print(f"\nSearch results for '{query}' in {folder}:")
+    print("-" * 60)
+    
+    results = list(client.search_messages(query, folder))
+    
+    if not results:
+        print("No matching messages found.")
+        return
+    
+    for idx, message in enumerate(results, 1):
+        read_status = "Read" if message.is_read else "Unread"
+        print(f"{idx}. [{read_status}] From: {message.from_}")
+        print(f"   Subject: {message.subject}")
+        print(f"   Date: {message.date}")
+        print(f"   ID: {message.id}")
+        print("-" * 60)
+
+
+def populate_mock_data(client, count=20):
+    """Add mock messages to the client for testing."""
+    print(f"\nGenerating {count} mock messages...")
+    
+    # Create a mock fetcher
+    fetcher = MockFetcher()
+    fetcher.set_client(client)
+    
+    # Generate mock messages
+    messages = fetcher.fetch_messages(count=count)
+    
+    print(f"Added {len(messages)} mock messages to INBOX")
+    
+    # Add some messages to other folders
+    folders = ["Sent", "Drafts", "Archive"]
+    for folder in folders:
+        folder_count = count // 4  # Add fewer messages to other folders
+        folder_messages = fetcher.fetch_messages(folder=folder, count=folder_count)
+        print(f"Added {len(folder_messages)} mock messages to {folder}")
+
+
+def main():
+    """Demonstrate the email client functionality."""
+    parser = argparse.ArgumentParser(description="Email Client Demo")
+    parser.add_argument("--populate", type=int, help="Populate with N mock messages")
+    parser.add_argument("--list", action="store_true", help="List messages")
+    parser.add_argument("--folder", default="INBOX", help="Folder to use")
+    parser.add_argument("--limit", type=int, default=10, help="Limit number of messages")
+    parser.add_argument("--search", help="Search for messages")
+    parser.add_argument("--view", help="View message by ID")
+    
+    args = parser.parse_args()
+    
+    # Get client instance
+    client = get_client()
+    
+    # List folders
+    list_folders(client)
+    
+    # Populate with mock data if requested
+    if args.populate:
+        populate_mock_data(client, args.populate)
+    
+    # List messages if requested
+    if args.list:
+        list_messages(client, args.folder, args.limit)
+    
+    # Search messages if requested
+    if args.search:
+        search_messages(client, args.search, args.folder)
+    
+    # View message if requested
+    if args.view:
+        view_message(client, args.view, args.folder)
+
+
+if __name__ == "__main__":
+    main()
+
+================================================================================
+
+FILE: my_inbox_impl\examples\imap_example.py
+LINES: 1
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+
+FILE: my_inbox_impl\src\my_inbox_impl\mail_fetcher.py
+LINES: 386
+--------------------------------------------------------------------------------
+
+"""Utility module for fetching emails from various sources.
+
+This module provides a mechanism to fetch emails from external sources
+and add them to the local email client.
+"""
+
+import imaplib
+import email
+import email.message
+import email.header
+import email.utils
+import uuid
+import datetime
+from typing import List, Dict, Any, Tuple, Optional
+import os
+import ssl
+import json
+import time
+
+from ._impl import ClientImpl, MessageImpl, AttachmentImpl
+
+
+class IMAPFetcher:
+    """Class for fetching emails from an IMAP server."""
+    
+    def __init__(self, host: str, username: str, password: str, port: int = 993, use_ssl: bool = True) -> None:
+        """Initialize the IMAP fetcher with server details."""
+        self.host = host
+        self.port = port
+        self.username = username
+        self.password = password
+        self.use_ssl = use_ssl
+        self.client = None
+        self._connect()
+    
+    def _connect(self) -> None:
+        """Connect to the IMAP server."""
+        if self.use_ssl:
+            self.connection = imaplib.IMAP4_SSL(self.host, self.port)
+        else:
+            # Use type ignore to handle the type inconsistency
+            self.connection = imaplib.IMAP4(self.host, self.port)  # type: ignore
+        
+        # Login
+        self.connection.login(self.username, self.password)
+    
+    def set_client(self, client: ClientImpl) -> None:
+        """Set the email client to use for storing fetched messages."""
+        self.client = client
+    
+    def list_folders(self) -> List[str]:
+        """List available folders on the server."""
+        result, data = self.connection.list()
+        if result != 'OK':
+            raise RuntimeError(f"Failed to list folders: {result}")
+        
+        folders = []
+        for item in data:
+            # Parse folder name from response
+            parts = item.decode().split('"')
+            if len(parts) >= 3:
+                folders.append(parts[2].strip())
+        
+        return folders
+    
+    def fetch_messages(self, folder: str = "INBOX", limit: int = 10) -> List[MessageImpl]:
+        """Fetch messages from the specified folder."""
+        if self.client is None:
+            raise ValueError("No client has been set")
+        
+        # Select the folder
+        result, _ = self.connection.select(folder)
+        if result != 'OK':
+            raise RuntimeError(f"Failed to select folder '{folder}': {result}")
+        
+        # Search for all messages
+        result, data = self.connection.search(None, 'ALL')
+        if result != 'OK':
+            raise RuntimeError(f"Failed to search messages: {result}")
+        
+        message_ids = data[0].split()
+        # Take only the most recent 'limit' messages
+        message_ids = message_ids[-limit:]
+        
+        fetched_messages = []
+        
+        for msg_id in message_ids:
+            result, data = self.connection.fetch(msg_id, '(RFC822)')
+            if result != 'OK':
+                print(f"Failed to fetch message {msg_id}: {result}")
+                continue
+            
+            email_data = data[0][1]
+            email_message = email.message_from_bytes(email_data)
+            
+            # Parse message
+            message = self._parse_message(email_message)
+            
+            # Add to client
+            try:
+                self.client.add_message(message, folder)
+                fetched_messages.append(message)
+            except Exception as e:
+                print(f"Error adding message to client: {e}")
+        
+        return fetched_messages
+    
+    def _parse_message(self, email_message) -> MessageImpl:
+        """Parse an email.message.Message object into a MessageImpl."""
+        # Extract header information
+        message_id = email_message.get('Message-ID', str(uuid.uuid4()))
+        if not message_id:
+            message_id = str(uuid.uuid4())
+        
+        # Remove angle brackets if present
+        message_id = message_id.strip('<>')
+        
+        # Get and decode subject
+        subject = self._decode_header(email_message.get('Subject', 'No Subject'))
+        
+        # Get sender
+        from_header = email_message.get('From', 'Unknown')
+        from_ = self._decode_header(from_header)
+        
+        # Get recipients
+        to_header = email_message.get('To', '')
+        to = self._decode_header(to_header)
+        
+        cc_header = email_message.get('Cc', None)
+        cc = self._decode_header(cc_header) if cc_header else None
+        
+        bcc_header = email_message.get('Bcc', None)
+        bcc = self._decode_header(bcc_header) if bcc_header else None
+        
+        # Get date
+        date_header = email_message.get('Date', None)
+        date = date_header
+        
+        # Extract body and attachments
+        body, attachments = self._extract_content(email_message)
+        
+        # Create and return a MessageImpl object
+        # In _parse_message and other places where MessageImpl is created
+        message = MessageImpl(
+            _id=message_id,  # Changed from message_id
+            _from=from_,     # Changed from from_
+            _to=to,          # Changed from to
+            _cc=cc,          # Changed from cc
+            _bcc=bcc,        # Changed from bcc
+            _date=date,      # Changed from date
+            _subject=subject,# Changed from subject
+            _body=body,      # Changed from body
+            _attachments=attachments,  # Changed from attachments
+            _is_read=False   # Changed from is_read
+        )
+        return message
+    
+    def _decode_header(self, header: str) -> str:
+        """Decode email header string."""
+        if not header:
+            return ""
+        
+        decoded_header = ""
+        for part, encoding in email.header.decode_header(header):
+            if isinstance(part, bytes):
+                if encoding:
+                    # To:
+                    try:
+                        decoded_part = part.decode(encoding)
+                    except (UnicodeDecodeError, LookupError):
+                        decoded_part = part.decode('utf-8', errors='replace')
+                else:
+                    decoded_part = part.decode('utf-8', errors='replace')
+            else:
+                decoded_part = part
+            
+            decoded_header += decoded_part
+        
+        return decoded_header
+    
+    def _extract_content(self, email_message) -> Tuple[str, List[AttachmentImpl]]:
+        """Extract body and attachments from an email message."""
+        body = ""
+        attachments = []
+        
+        # Handle multipart messages
+        if email_message.is_multipart():
+            for part in email_message.walk():
+                # Skip container multipart parts
+                if part.get_content_maintype() == 'multipart':
+                    continue
+                
+                content_type = part.get_content_type()
+                content_disposition = part.get('Content-Disposition', '')
+                
+                # Handle attachments
+                if 'attachment' in content_disposition or content_type not in ['text/plain', 'text/html']:
+                    filename = part.get_filename()
+                    if not filename:
+                        filename = f"attachment_{len(attachments)}"
+                    
+                    content = part.get_payload(decode=True)
+                    attachment = AttachmentImpl(
+                        filename=filename,
+                        content_type=content_type,
+                        content=content
+                    )
+                    attachments.append(attachment)
+                
+                # Handle body content
+                elif content_type == 'text/plain':
+                    try:
+                        charset = part.get_content_charset() or 'utf-8'
+                        payload = part.get_payload(decode=True)
+                        decoded_text = payload.decode(charset, errors='replace')
+                        body += decoded_text
+                    except Exception as e:
+                        print(f"Error decoding text/plain part: {e}")
+                
+                # Fallback to HTML if no plain text
+                elif content_type == 'text/html' and not body:
+                    try:
+                        charset = part.get_content_charset() or 'utf-8'
+                        payload = part.get_payload(decode=True)
+                        decoded_text = payload.decode(charset, errors='replace')
+                        body += f"[HTML Content]\n{decoded_text}"
+                    except Exception as e:
+                        print(f"Error decoding text/html part: {e}")
+        
+        # Handle non-multipart messages
+        else:
+            # Get content type and charset
+            content_type = email_message.get_content_type()
+            charset = email_message.get_content_charset() or 'utf-8'
+            
+            # Get and decode payload
+            try:
+                payload = email_message.get_payload(decode=True)
+                if payload:
+                    body = payload.decode(charset, errors='replace')
+            except Exception as e:
+                print(f"Error decoding message body: {e}")
+                body = "[Message body could not be decoded]"
+        
+        return body, attachments
+    
+    def close(self) -> None:
+        """Close the connection to the IMAP server."""
+        try:
+            self.connection.close()
+            self.connection.logout()
+        except (imaplib.IMAP4.error, ConnectionError, OSError):
+            pass
+
+
+class MockFetcher:
+    """Class for generating mock emails for testing purposes."""
+    
+    def __init__(self) -> None:
+        """Initialize the mock fetcher."""
+        self.client = None
+    
+    def set_client(self, client: ClientImpl) -> None:
+        """Set the email client to use for storing fetched messages."""
+        self.client = client
+    
+    def fetch_messages(self, folder: str = "INBOX", count: int = 5) -> List[MessageImpl]:
+        """Generate mock messages and add them to the client."""
+        if self.client is None:
+            raise ValueError("No client has been set")
+        
+        # Create mock messages
+        mock_messages = self._generate_mock_messages(count)
+        
+        # Add to client
+        for message in mock_messages:
+            try:
+                self.client.add_message(message, folder)
+            except Exception as e:
+                print(f"Error adding message to client: {e}")
+        
+        return mock_messages
+    
+    def _generate_mock_messages(self, count: int) -> List[MessageImpl]:
+        """Generate a list of mock messages."""
+        messages = []
+        
+        for i in range(count):
+            # Create a unique ID
+            message_id = str(uuid.uuid4())
+            
+            # Set the date (recent messages, with some variation)
+            date_offset = i * 3600  # hours in seconds
+            date = (datetime.datetime.now() - datetime.timedelta(seconds=date_offset))
+            date_str = date.strftime("%a, %d %b %Y %H:%M:%S +0000")
+            
+            # Create message with varying content
+            subject = f"Test Message {i+1}"
+            from_ = "sender@example.com"
+            to = "recipient@example.com"
+            
+            # Vary the message content
+            if i % 3 == 0:
+                body = f"This is test message {i+1} with some important content to test search functionality."
+                subject = f"Important: {subject}"
+            elif i % 3 == 1:
+                body = f"Newsletter {i+1}: Updates and information about our latest developments."
+                subject = f"Newsletter: {subject}"
+            else:
+                body = f"This is a regular message {i+1} with nothing particularly special about it."
+            
+            # Create attachments for some messages
+            attachments = []
+            if i % 2 == 0:
+                # Create a simple text attachment
+                text_content = f"This is the content of attachment {i+1}".encode('utf-8')
+                attachment = AttachmentImpl(
+                    filename=f"attachment_{i+1}.txt",
+                    content_type="text/plain",
+                    content=text_content
+                )
+                attachments.append(attachment)
+            
+            message = MessageImpl(
+                _id=message_id,
+                _from=from_,
+                _to=to,
+                _cc="cc@example.com" if i % 2 == 0 else None,
+                _bcc="bcc@example.com" if i % 3 == 0 else None,
+                _date=date_str,
+                _subject=subject,
+                _body=body,
+                _attachments=attachments,
+                _is_read=False
+            )
+            
+            messages.append(message)
+        
+        return messages
+
+
+def import_emails_from_json(filename: str, client: ClientImpl, folder: str = "INBOX") -> List[MessageImpl]:
+    """Import emails from a JSON file into the client."""
+    if not os.path.exists(filename):
+        raise FileNotFoundError(f"File not found: {filename}")
+    
+    imported_messages = []
+    
+    with open(filename, 'r') as f:
+        data = json.load(f)
+        
+        for message_data in data:
+            try:
+                attachments = []
+                
+                # Process attachments if any
+                for att_data in message_data.get("attachments", []):
+                    attachment = AttachmentImpl(
+                        filename=att_data["filename"],
+                        content_type=att_data["content_type"],
+                        content=bytes.fromhex(att_data["content"]) if isinstance(att_data["content"], str) else bytes(att_data["content"])
+                    )
+                    attachments.append(attachment)
+                
+                # Create message
+                message = MessageImpl(
+                    _id=message_data.get("id", str(uuid.uuid4())),
+                    _from=message_data["from"],
+                    _to=message_data["to"],
+                    _cc=message_data.get("cc"), 
+                    _bcc=message_data.get("bcc"),
+                    _date=message_data.get("date", datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S +0000")),
+                    _subject=message_data["subject"],
+                    _body=message_data["body"],
+                    _attachments=attachments,
+                    _is_read=message_data.get("is_read", False)
+                )
+                
+                # Add to client
+                client.add_message(message, folder)
+                imported_messages.append(message)
+                
+            except Exception as e:
+                print(f"Error importing message: {e}")
+    
+    return imported_messages
+
+
+================================================================================
+
+FILE: my_inbox_impl\src\my_inbox_impl\_impl.py
+LINES: 349
+--------------------------------------------------------------------------------
+
+from typing import Dict, Iterator, List, Optional
 import my_inbox_api
-from typing import Iterator, List, Optional
+import datetime
+import uuid
+import os
+import json
+from pathlib import Path
+from dataclasses import dataclass, field
 
-# Implementation of the Attachment protocol
-class Attachment(my_inbox_api.Attachment):
-    # Implementation will go here
-    pass
 
-# Implementation of the Message protocol
-class Message(my_inbox_api.Message):
-    # Implementation will go here
-    pass
+class AttachmentImpl:
+    """Implementation of the Attachment protocol."""
+    
+    def __init__(self, filename: str, content_type: str, content: bytes) -> None:
+        self._filename = filename
+        self._content_type = content_type
+        self._content = content
+    
+    @property
+    def filename(self) -> str:
+        return self._filename
+    
+    @property
+    def content_type(self) -> str:
+        return self._content_type
+    
+    @property
+    def size(self) -> int:
+        return len(self._content)
+    
+    def get_content(self) -> bytes:
+        return self._content
 
-# Implementation of the Client protocol
-class Client(my_inbox_api.Client):
-    # Implementation will go here
-    pass
+
+@dataclass
+class MessageImpl:
+    """Implementation of the Message protocol."""
+    
+    _id: str
+    _from: str
+    _to: str
+    _subject: str
+    _body: str
+    _date: Optional[str] = None
+    _cc: Optional[str] = None
+    _bcc: Optional[str] = None
+    _attachments: List[AttachmentImpl] = field(default_factory=list)
+    _is_read: bool = False
+    
+    def __post_init__(self) -> None:
+        """Initialize date if not provided."""
+        if self._date is None:
+            # Generate a date with proper timezone format
+            self._date = datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S %z")
+            # If timezone formatting fails (empty %z), use alternative
+            if self._date.endswith(" "):
+                self._date = datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S +0000")
+                
+    @property
+    def id(self) -> str:
+        return self._id
+    
+    @property
+    def from_(self) -> str:
+        return self._from
+    
+    @property
+    def to(self) -> str:
+        return self._to
+    
+    @property
+    def cc(self) -> Optional[str]:
+        return self._cc
+    
+    @property
+    def bcc(self) -> Optional[str]:
+        return self._bcc
+    
+    @property
+    def date(self) -> str:
+        return self._date
+    
+    @property
+    def subject(self) -> str:
+        return self._subject
+    
+    @property
+    def body(self) -> str:
+        return self._body
+    
+    @property
+    def attachments(self) -> List[my_inbox_api.Attachment]:
+        return self._attachments
+    
+    @property
+    def is_read(self) -> bool:
+        return self._is_read
+    
+    def mark_as_read(self) -> None:
+        self._is_read = True
+    
+    def mark_as_unread(self) -> None:
+        self._is_read = False
+    
+    def to_dict(self) -> Dict:
+        """Convert message to a dictionary for storage."""
+        attachments = []
+        for attachment in self._attachments:
+            attachments.append({
+                "filename": attachment.filename,
+                "content_type": attachment.content_type,
+                "content": attachment.get_content().hex()  # Convert bytes to hex for storage
+            })
+        
+        return {
+            "id": self._id,
+            "from": self._from,
+            "to": self._to,
+            "cc": self._cc,
+            "bcc": self._bcc,
+            "date": self._date,
+            "subject": self._subject,
+            "body": self._body,
+            "is_read": self._is_read,
+            "attachments": attachments
+        }
+    
+    @classmethod
+    def from_dict(cls, data: Dict) -> 'MessageImpl':
+        """Create a message from a dictionary."""
+        attachments = []
+        for attachment_data in data.get("attachments", []):
+            # Convert hex back to bytes
+            content = bytes.fromhex(attachment_data["content"])
+            attachment = AttachmentImpl(
+                filename=attachment_data["filename"],
+                content_type=attachment_data["content_type"],
+                content=content
+            )
+            attachments.append(attachment)
+        
+        return cls(
+            _id=data["id"],
+            _from=data["from"],
+            _to=data["to"],
+            _cc=data.get("cc"),
+            _bcc=data.get("bcc"),
+            _date=data["date"],
+            _subject=data["subject"],
+            _body=data["body"],
+            _is_read=data["is_read"],
+            _attachments=attachments
+        )
+
+
+class ClientImpl:
+    """Implementation of the Client protocol with local storage."""
+    
+    def __init__(self, data_dir: Optional[str] = None) -> None:
+        """Initialize the client with optional data directory.
+        
+        Args:
+            data_dir: Directory to store email data. If None, uses './email_data'.
+        """
+        self._data_dir = data_dir or os.path.join(os.path.expanduser("~"), ".my_inbox")
+        
+        # Create data directory if it doesn't exist
+        if not os.path.exists(self._data_dir):
+            os.makedirs(self._data_dir)
+        
+        # Initialize default folders if they don't exist
+        self._folders = ["INBOX", "Sent", "Drafts", "Trash", "Archive"]
+        for folder in self._folders:
+            folder_path = os.path.join(self._data_dir, folder)
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
+        
+        # Load messages from disk or initialize empty dictionaries
+        self._messages = self._load_messages()
+    
+    def _load_messages(self) -> Dict[str, List[MessageImpl]]:
+        """Load messages from disk."""
+        messages: Dict[str, List[MessageImpl]] = {}
+        
+        for folder in self._folders:
+            messages[folder] = []
+            folder_path = os.path.join(self._data_dir, folder)
+            
+            # Get all JSON files in the folder
+            message_files = [f for f in os.listdir(folder_path)
+                            if f.endswith('.json') and os.path.isfile(os.path.join(folder_path, f))]
+            
+            for filename in message_files:
+                file_path = os.path.join(folder_path, filename)
+                try:
+                    with open(file_path, 'r') as f:
+                        message_data = json.load(f)
+                        message = MessageImpl.from_dict(message_data)
+                        messages[folder].append(message)
+                except (json.JSONDecodeError, KeyError) as e:
+                    print(f"Error loading message from {file_path}: {e}")
+        
+        return messages
+    
+    def _save_message(self, message: MessageImpl, folder: str) -> None:
+        """Save a message to disk."""
+        folder_path = os.path.join(self._data_dir, folder)
+        file_path = os.path.join(folder_path, f"{message.id}.json")
+        
+        with open(file_path, 'w') as f:
+            json.dump(message.to_dict(), f, indent=2)
+    
+    def get_messages(self, limit: Optional[int] = None, folder: str = "INBOX") -> Iterator[my_inbox_api.Message]:
+        """Return an iterator of messages from the specified folder."""
+        # Make sure the folder exists
+        if folder not in self._folders:
+            raise ValueError(f"Folder '{folder}' does not exist")
+        
+        # Sort messages by date (newest first) with better error handling
+        def safe_date_key(message) -> datetime.datetime:
+            try:
+                # Try the original format first
+                return datetime.datetime.strptime(message.date, "%a, %d %b %Y %H:%M:%S %z")
+            except ValueError:
+                try:
+                    # Try without timezone
+                    return datetime.datetime.strptime(message.date, "%a, %d %b %Y %H:%M:%S")
+                except ValueError:
+                    # Fallback to today's date if parsing fails
+                    return datetime.datetime.now()
+        
+        sorted_messages = sorted(
+            self._messages.get(folder, []),
+            key=safe_date_key,
+            reverse=True
+        )
+        
+        # Apply limit if specified
+        if limit is not None:
+            sorted_messages = sorted_messages[:limit]
+        
+        for message in sorted_messages:
+            yield message
+    
+    def search_messages(self, query: str, folder: str = "INBOX") -> Iterator[my_inbox_api.Message]:
+        """Search for messages that match the query in the specified folder."""
+        # Make sure the folder exists
+        if folder not in self._folders:
+            raise ValueError(f"Folder '{folder}' does not exist")
+        
+        # Simple case-insensitive search in subject and body
+        query = query.lower()
+        for message in self._messages.get(folder, []):
+            if (query in message.subject.lower() or
+                query in message.body.lower() or
+                query in message.from_.lower() or
+                query in message.to.lower()):
+                yield message
+    
+    def get_folders(self) -> List[str]:
+        """Return a list of available mail folders."""
+        return self._folders
+    
+    def add_message(self, message: MessageImpl, folder: str = "INBOX") -> None:
+        """Add a new message to the specified folder."""
+        # Make sure the folder exists
+        if folder not in self._folders:
+            raise ValueError(f"Folder '{folder}' does not exist")
+        
+        # Add the message to the in-memory store
+        if folder not in self._messages:
+            self._messages[folder] = []
+        self._messages[folder].append(message)
+        
+        # Save the message to disk
+        self._save_message(message, folder)
+    
+    def create_folder(self, folder_name: str) -> None:
+        """Create a new folder."""
+        if folder_name in self._folders:
+            raise ValueError(f"Folder '{folder_name}' already exists")
+        
+        # Create folder directory
+        folder_path = os.path.join(self._data_dir, folder_name)
+        os.makedirs(folder_path)
+        
+        # Add to list of folders
+        self._folders.append(folder_name)
+        self._messages[folder_name] = []
+    
+    def delete_message(self, message_id: str, folder: str) -> bool:
+        """Delete a message from the specified folder."""
+        # Make sure the folder exists
+        if folder not in self._folders:
+            raise ValueError(f"Folder '{folder}' does not exist")
+        
+        # Find and remove the message
+        for i, message in enumerate(self._messages.get(folder, [])):
+            if message.id == message_id:
+                # Remove from in-memory store
+                del self._messages[folder][i]
+                
+                # Remove from disk
+                file_path = os.path.join(self._data_dir, folder, f"{message_id}.json")
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                
+                return True
+        
+        return False
+    
+    def move_message(self, message_id: str, source_folder: str, target_folder: str) -> bool:
+        """Move a message from one folder to another."""
+        # Make sure the folders exist
+        if source_folder not in self._folders:
+            raise ValueError(f"Source folder '{source_folder}' does not exist")
+        if target_folder not in self._folders:
+            raise ValueError(f"Target folder '{target_folder}' does not exist")
+        
+        # Find the message
+        for i, message in enumerate(self._messages.get(source_folder, [])):
+            if message.id == message_id:
+                # Remove from source folder
+                message = self._messages[source_folder].pop(i)
+                
+                # Add to target folder
+                if target_folder not in self._messages:
+                    self._messages[target_folder] = []
+                self._messages[target_folder].append(message)
+                
+                # Update on disk
+                source_path = os.path.join(self._data_dir, source_folder, f"{message_id}.json")
+                target_path = os.path.join(self._data_dir, target_folder, f"{message_id}.json")
+                
+                if os.path.exists(source_path):
+                    os.rename(source_path, target_path)
+                else:
+                    # If file doesn't exist, just save it to the target folder
+                    self._save_message(message, target_folder)
+                
+                return True
+        
+        return False
+
+
+# Factory function to create and return a client
+def get_client() -> my_inbox_api.Client:
+    """Return an instance of a Mail Client."""
+    return ClientImpl()
+
+
+================================================================================
+
+FILE: my_inbox_impl\src\my_inbox_impl\__init__.py
+LINES: 3
+--------------------------------------------------------------------------------
+
+from ._impl import get_client, ClientImpl, MessageImpl, AttachmentImpl
+
+__all__ = ["get_client", "ClientImpl", "MessageImpl", "AttachmentImpl"]
+
+================================================================================
+
+FILE: my_inbox_impl\tests\test_impl.py
+LINES: 186
+--------------------------------------------------------------------------------
+
+import unittest
+import tempfile
+import os
+import shutil
+from pathlib import Path
+
+from my_inbox_impl import get_client, ClientImpl, MessageImpl, AttachmentImpl
+from my_inbox_impl.mail_fetcher import MockFetcher
+
+class TestInboxImplementation(unittest.TestCase):
+    """Test cases for the inbox implementation."""
+    
+    def setUp(self):
+        """Set up test environment."""
+        # Create temporary directory for test data
+        self.test_dir = tempfile.mkdtemp()
+        self.client = ClientImpl(data_dir=self.test_dir)
+    
+    def tearDown(self):
+        """Clean up test environment."""
+        # Remove temporary directory
+        shutil.rmtree(self.test_dir)
+    
+    def test_get_client(self):
+        """Test that get_client returns a valid Client instance."""
+        client = get_client()
+        self.assertIsNotNone(client)
+        
+        # Check that it has the required methods
+        self.assertTrue(hasattr(client, 'get_messages'))
+        self.assertTrue(hasattr(client, 'search_messages'))
+        self.assertTrue(hasattr(client, 'get_folders'))
+    
+    def test_attachment_implementation(self):
+        """Test the AttachmentImpl class."""
+        test_content = b"Test content for the attachment"
+        attachment = AttachmentImpl(
+            filename="test.txt",
+            content_type="text/plain",
+            content=test_content
+        )
+        
+        # Check properties
+        self.assertEqual(attachment.filename, "test.txt")
+        self.assertEqual(attachment.content_type, "text/plain")
+        self.assertEqual(attachment.size, len(test_content))
+        self.assertEqual(attachment.get_content(), test_content)
+    
+    def test_message_implementation(self):
+        """Test the MessageImpl class."""
+        # Create a test message
+        message = MessageImpl(
+            message_id="test123",
+            from_="sender@example.com",
+            to="recipient@example.com",
+            subject="Test Subject",
+            body="Test body content",
+            cc="cc@example.com",
+            bcc="bcc@example.com",
+            date="Mon, 01 Apr 2025 12:00:00 +0000",
+            is_read=False
+        )
+        
+        # Check properties
+        self.assertEqual(message.id, "test123")
+        self.assertEqual(message.from_, "sender@example.com")
+        self.assertEqual(message.to, "recipient@example.com")
+        self.assertEqual(message.cc, "cc@example.com")
+        self.assertEqual(message.bcc, "bcc@example.com")
+        self.assertEqual(message.date, "Mon, 01 Apr 2025 12:00:00 +0000")
+        self.assertEqual(message.subject, "Test Subject")
+        self.assertEqual(message.body, "Test body content")
+        self.assertEqual(message.is_read, False)
+        self.assertEqual(len(message.attachments), 0)
+        
+        # Test mark_as_read and mark_as_unread
+        message.mark_as_read()
+        self.assertEqual(message.is_read, True)
+        
+        message.mark_as_unread()
+        self.assertEqual(message.is_read, False)
+        
+        # Test message with attachments
+        test_attachment = AttachmentImpl(
+            filename="test.txt",
+            content_type="text/plain",
+            content=b"Test content"
+        )
+        
+        message_with_attachment = MessageImpl(
+            message_id="test456",
+            from_="sender@example.com",
+            to="recipient@example.com",
+            subject="Test with Attachment",
+            body="Message with attachment",
+            attachments=[test_attachment]
+        )
+        
+        self.assertEqual(len(message_with_attachment.attachments), 1)
+        self.assertEqual(message_with_attachment.attachments[0].filename, "test.txt")
+    
+    def test_client_implementation(self):
+        """Test the ClientImpl class."""
+        # Check default folders
+        folders = self.client.get_folders()
+        self.assertIn("INBOX", folders)
+        self.assertIn("Sent", folders)
+        
+        # Verify folder directories were created
+        for folder in folders:
+            folder_path = os.path.join(self.test_dir, folder)
+            self.assertTrue(os.path.exists(folder_path))
+        
+        # Test adding a message
+        message = MessageImpl(
+            message_id="test123",
+            from_="sender@example.com",
+            to="recipient@example.com",
+            subject="Test Subject",
+            body="Test body content"
+        )
+        
+        self.client.add_message(message, "INBOX")
+        
+# Verify message was added
+        messages = list(self.client.get_messages(folder="INBOX"))
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(messages[0].subject, "Test Subject")
+        
+        # Check message was saved to disk
+        message_path = os.path.join(self.test_dir, "INBOX", f"{message.id}.json")
+        self.assertTrue(os.path.exists(message_path))
+        
+        # Test search functionality
+        search_results = list(self.client.search_messages("Test", "INBOX"))
+        self.assertEqual(len(search_results), 1)
+        
+        # Test with no matching messages
+        search_results = list(self.client.search_messages("NotFound", "INBOX"))
+        self.assertEqual(len(search_results), 0)
+        
+        # Test creating a new folder
+        self.client.create_folder("TestFolder")
+        folders = self.client.get_folders()
+        self.assertIn("TestFolder", folders)
+        
+        # Test moving a message between folders
+        self.client.move_message(message.id, "INBOX", "TestFolder")
+        
+        # Verify message was moved
+        inbox_messages = list(self.client.get_messages(folder="INBOX"))
+        self.assertEqual(len(inbox_messages), 0)
+        
+        test_folder_messages = list(self.client.get_messages(folder="TestFolder"))
+        self.assertEqual(len(test_folder_messages), 1)
+        
+        # Test deleting a message
+        self.client.delete_message(message.id, "TestFolder")
+        test_folder_messages = list(self.client.get_messages(folder="TestFolder"))
+        self.assertEqual(len(test_folder_messages), 0)
+    
+    def test_mock_fetcher(self):
+        """Test the MockFetcher class."""
+        # Create a mock fetcher
+        fetcher = MockFetcher()
+        fetcher.set_client(self.client)
+        
+        # Generate mock messages
+        mock_messages = fetcher.fetch_messages(count=10)
+        self.assertEqual(len(mock_messages), 10)
+        
+        # Verify messages were added to the client
+        client_messages = list(self.client.get_messages(folder="INBOX"))
+        self.assertEqual(len(client_messages), 10)
+        
+        # Test search with mock messages
+        search_results = list(self.client.search_messages("Important", "INBOX"))
+        self.assertGreaterEqual(len(search_results), 1)
+        
+        # Check that some messages have attachments
+        messages_with_attachments = [m for m in client_messages if m.attachments]
+        self.assertGreaterEqual(len(messages_with_attachments), 1)
+
+
+if __name__ == '__main__':
+    unittest.main()
 
 ================================================================================
 
 
 SUMMARY
-Total files processed: 19
-Total lines of code: 1503
+Total files processed: 26
+Total lines of code: 2911

@@ -1,11 +1,10 @@
-from typing import Dict, Iterator, List, Optional
+from typing import Dict, Iterator, List
 import my_inbox_api
 import datetime
 import uuid
 import os
 import json
 from pathlib import Path
-from dataclasses import dataclass, field
 
 
 class AttachmentImpl:
@@ -32,23 +31,48 @@ class AttachmentImpl:
         return self._content
 
 
-@dataclass
 class MessageImpl:
     """Implementation of the Message protocol."""
     
-    _id: str
-    _from: str
-    _to: str
-    _subject: str
-    _body: str
-    _date: Optional[str] = None
-    _cc: Optional[str] = None
-    _bcc: Optional[str] = None
-    _attachments: List[AttachmentImpl] = field(default_factory=list)
-    _is_read: bool = False
-    
-    def __post_init__(self) -> None:
-        """Initialize date if not provided."""
+    def __init__(
+        self, 
+        _id: str,
+        _from: str,
+        _to: str,
+        _subject: str,
+        _body: str,
+        _date: str | None = None,
+        _cc: str | None = None,
+        _bcc: str | None = None,
+        _attachments: List[AttachmentImpl] | None = None,
+        _is_read: bool = False
+    ) -> None:
+        """Initialize the message with the given parameters.
+        
+        Args:
+            _id: Unique identifier for the message
+            _from: Sender of the message
+            _to: Recipient of the message
+            _subject: Subject line of the message
+            _body: Body content of the message
+            _date: Date of the message (defaults to current date if None)
+            _cc: CC recipients (if any)
+            _bcc: BCC recipients (if any)
+            _attachments: List of attachments (if any)
+            _is_read: Whether the message has been read
+        """
+        self._id = _id
+        self._from = _from
+        self._to = _to
+        self._subject = _subject
+        self._body = _body
+        self._date = _date
+        self._cc = _cc
+        self._bcc = _bcc
+        self._attachments = _attachments if _attachments is not None else []
+        self._is_read = _is_read
+        
+        # Initialize date if not provided
         if self._date is None:
             # Generate a date with proper timezone format
             self._date = datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S %z")
@@ -69,11 +93,11 @@ class MessageImpl:
         return self._to
     
     @property
-    def cc(self) -> Optional[str]:
+    def cc(self) -> str | None:
         return self._cc
     
     @property
-    def bcc(self) -> Optional[str]:
+    def bcc(self) -> str | None:
         return self._bcc
     
     @property
@@ -127,7 +151,16 @@ class MessageImpl:
     
     @classmethod
     def from_dict(cls, data: Dict) -> 'MessageImpl':
-        """Create a message from a dictionary."""
+        """Create a message instance from a dictionary representation.
+        
+        This method is used primarily for deserializing messages from storage.
+        
+        Args:
+            data: A dictionary containing message data, typically loaded from JSON
+                 
+        Returns:
+            A new MessageImpl instance populated with the data from the dictionary
+        """
         attachments = []
         for attachment_data in data.get("attachments", []):
             # Convert hex back to bytes
@@ -156,7 +189,7 @@ class MessageImpl:
 class ClientImpl:
     """Implementation of the Client protocol with local storage."""
     
-    def __init__(self, data_dir: Optional[str] = None) -> None:
+    def __init__(self, data_dir: str | None = None) -> None:
         """Initialize the client with optional data directory.
         
         Args:
@@ -210,24 +243,47 @@ class ClientImpl:
         with open(file_path, 'w') as f:
             json.dump(message.to_dict(), f, indent=2)
     
-    def get_messages(self, limit: Optional[int] = None, folder: str = "INBOX") -> Iterator[my_inbox_api.Message]:
+    def get_messages(self, limit: int | None = None, folder: str = "INBOX") -> Iterator[my_inbox_api.Message]:
         """Return an iterator of messages from the specified folder."""
         # Make sure the folder exists
         if folder not in self._folders:
             raise ValueError(f"Folder '{folder}' does not exist")
         
         # Sort messages by date (newest first) with better error handling
-        def safe_date_key(message) -> datetime.datetime:
+        def safe_date_key(msg) -> datetime.datetime:
+            """Parse message date to datetime for sorting, with timezone handling.
+            
+            Args:
+                msg: The message containing a date string
+                
+            Returns:
+                A datetime object for sorting purposes
+            """
             try:
-                # Try the original format first
-                return datetime.datetime.strptime(message.date, "%a, %d %b %Y %H:%M:%S %z")
+                # First try with timezone
+                dt = datetime.datetime.strptime(msg.date, "%a, %d %b %Y %H:%M:%S %z")
+                # Convert to UTC for consistent comparison
+                return dt.astimezone(datetime.timezone.utc)
             except ValueError:
                 try:
-                    # Try without timezone
-                    return datetime.datetime.strptime(message.date, "%a, %d %b %Y %H:%M:%S")
+                    # Try common format with +0000 style timezone
+                    dt = datetime.datetime.strptime(msg.date, "%a, %d %b %Y %H:%M:%S +0000")
+                    # Already UTC
+                    return dt
                 except ValueError:
-                    # Fallback to today's date if parsing fails
-                    return datetime.datetime.now()
+                    try:
+                        # Try without timezone
+                        dt = datetime.datetime.strptime(msg.date, "%a, %d %b %Y %H:%M:%S")
+                        # Add UTC timezone to naive datetime
+                        return dt.replace(tzinfo=datetime.timezone.utc)
+                    except ValueError:
+                        try:
+                            # Try another common format
+                            dt = datetime.datetime.strptime(msg.date, "%d %b %Y %H:%M:%S %z")
+                            return dt.astimezone(datetime.timezone.utc)
+                        except ValueError:
+                            # Fallback to today's date with UTC timezone
+                            return datetime.datetime.now(datetime.timezone.utc)
         
         sorted_messages = sorted(
             self._messages.get(folder, []),
@@ -254,7 +310,8 @@ class ClientImpl:
             if (query in message.subject.lower() or
                 query in message.body.lower() or
                 query in message.from_.lower() or
-                query in message.to.lower()):
+                query in message.to.lower() or
+                message.id.lower() == query.lower()):  # Added direct ID matching
                 yield message
     
     def get_folders(self) -> List[str]:
@@ -276,7 +333,14 @@ class ClientImpl:
         self._save_message(message, folder)
     
     def create_folder(self, folder_name: str) -> None:
-        """Create a new folder."""
+        """Create a new folder.
+        
+        Args:
+            folder_name: Name of the folder to create
+            
+        Raises:
+            ValueError: If the folder already exists
+        """
         if folder_name in self._folders:
             raise ValueError(f"Folder '{folder_name}' already exists")
         
@@ -289,11 +353,27 @@ class ClientImpl:
         self._messages[folder_name] = []
     
     def delete_message(self, message_id: str, folder: str) -> bool:
-        """Delete a message from the specified folder."""
+        """Delete a message from the specified folder.
+        
+        If the folder is not 'Trash', the message is moved to the Trash folder 
+        instead of being permanently deleted. Messages in the Trash folder are
+        permanently deleted.
+        
+        Args:
+            message_id: ID of the message to delete
+            folder: Folder containing the message
+            
+        Returns:
+            True if the message was deleted or moved, False if not found
+        """
         # Make sure the folder exists
         if folder not in self._folders:
             raise ValueError(f"Folder '{folder}' does not exist")
         
+        # If not in Trash folder, move to Trash instead of deleting
+        if folder != "Trash":
+            return self.move_message(message_id, folder, "Trash")
+            
         # Find and remove the message
         for i, message in enumerate(self._messages.get(folder, [])):
             if message.id == message_id:
@@ -310,7 +390,19 @@ class ClientImpl:
         return False
     
     def move_message(self, message_id: str, source_folder: str, target_folder: str) -> bool:
-        """Move a message from one folder to another."""
+        """Move a message from one folder to another.
+        
+        Args:
+            message_id: ID of the message to move
+            source_folder: Current folder of the message
+            target_folder: Destination folder
+            
+        Returns:
+            True if the message was moved, False if not found
+            
+        Raises:
+            ValueError: If either source or target folder doesn't exist
+        """
         # Make sure the folders exist
         if source_folder not in self._folders:
             raise ValueError(f"Source folder '{source_folder}' does not exist")
