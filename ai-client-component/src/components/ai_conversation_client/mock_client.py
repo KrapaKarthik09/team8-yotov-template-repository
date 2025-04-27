@@ -10,8 +10,8 @@ import uuid
 from datetime import datetime
 from typing import Dict, List, Optional, Union
 
-from src.components.ai_conversation_client.api import AIConversationClient
-from src.components.ai_conversation_client.factory import AIClientFactory
+from components.ai_conversation_client.api import AIConversationClient
+from components.ai_conversation_client.factory import AIClientFactory
 
 
 class MockAIClient(AIConversationClient):

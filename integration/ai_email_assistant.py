@@ -11,13 +11,14 @@ from typing import Dict, List, Optional, Union
 from datetime import datetime
 
 # Import from my_inbox_impl
-from my_inbox_impl import get_client as get_email_client
+# from my_inbox_impl import get_client as get_email_client
+# from my_inbox_impl.get_client import get_email_client
+from my_inbox_impl._impl import get_client as get_email_client
 from my_inbox_impl.mail_fetcher import MockFetcher, IMAPFetcher
 
 # Import from AI conversation client
-from src.components.ai_conversation_client import get_client as get_ai_client
-from src.components.ai_conversation_client import AIConversationClient
-
+from components.ai_conversation_client import get_client as get_ai_client
+from components.ai_conversation_client import AIConversationClient, CerebrasClient
 
 class AIEmailAssistant:
     """

@@ -11,8 +11,8 @@ from typing import Any, Dict, List, Optional, Union, cast
 
 import requests
 
-from src.components.ai_conversation_client.api import AIConversationClient
-from src.components.ai_conversation_client.factory import AIClientFactory
+from components.ai_conversation_client.api import AIConversationClient
+from components.ai_conversation_client.factory import AIClientFactory
 
 
 class CerebrasClient(AIConversationClient):

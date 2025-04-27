@@ -22,10 +22,10 @@ Example usage:
 
 from typing import Any
 
-from src.components.ai_conversation_client.api import AIConversationClient
-from src.components.ai_conversation_client.cerebras_client import CerebrasClient
-from src.components.ai_conversation_client.factory import AIClientFactory
-from src.components.ai_conversation_client.mock_client import MockAIClient
+from components.ai_conversation_client.api import AIConversationClient
+from components.ai_conversation_client.cerebras_client import CerebrasClient
+from components.ai_conversation_client.factory import AIClientFactory
+from components.ai_conversation_client.mock_client import MockAIClient
 
 
 # Register available clients (this happens when the package is imported)

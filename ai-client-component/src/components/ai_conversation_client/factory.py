@@ -7,7 +7,7 @@ implementations or configure clients as needed.
 
 from typing import Dict, Optional, Type, Union, Any
 
-from src.components.ai_conversation_client.api import AIConversationClient
+from components.ai_conversation_client.api import AIConversationClient
 
 
 class AIClientFactory:

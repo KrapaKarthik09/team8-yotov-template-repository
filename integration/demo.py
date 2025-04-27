@@ -5,8 +5,15 @@ This script demonstrates the integration between the AI Conversation Client
 and MyInbox email implementation.
 """
 
-import os
 import sys
+import os
+
+# Project root (for integration import)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'my_inbox_impl', 'src')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'my_inbox_api', 'src')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'ai-client-component', 'src')))
+
 import argparse
 from typing import Dict, List, Optional, Any
 
