@@ -66,7 +66,9 @@ class TestCliFormat(unittest.TestCase):
 @pytest.fixture
 def mock_cerebras_client() -> MagicMock:
     """Create a mock CerebrasClient for testing CLI commands."""
-    with patch('src.components.ai_conversation_client.cli.CerebrasClient') as mock_client_class:
+    with patch(
+        'src.components.ai_conversation_client.cli.CerebrasClient'
+    ) as mock_client_class:
         mock_client = MagicMock()
         mock_client_class.return_value = mock_client
 
@@ -186,14 +188,14 @@ class TestCliCommands:
              patch('sys.stdout', new=io.StringIO()) as fake_stdout, \
              patch.dict(os.environ, {}, clear=True), \
              patch('os.path.exists', return_value=False), \
-             patch('sys.exit') as mock_exit:  # Mock sys.exit to prevent test from actually exiting
+             patch('sys.exit') as mock_exit:
 
             main()
 
             # Check that the error message is printed
             output = fake_stdout.getvalue()
             assert "CEREBRAS_API_KEY environment variable is required" in output
-            
+
             # Verify that sys.exit was called with exit code 1
             mock_exit.assert_called_once_with(1)
 
@@ -203,7 +205,7 @@ class TestCliCommands:
         with patch.object(sys, 'argv', test_args), \
              patch('sys.stdout', new=io.StringIO()) as fake_stdout, \
              patch.dict(os.environ, {"CEREBRAS_API_KEY": "test-api-key"}), \
-             patch('sys.exit') as mock_exit:  # Mock sys.exit to prevent test from actually exiting
+             patch('sys.exit') as mock_exit:
 
             # Mock internal session tracking with empty sessions
             mock_cerebras_client._sessions = {}
@@ -213,6 +215,6 @@ class TestCliCommands:
             # Check that the error message is printed
             output = fake_stdout.getvalue()
             assert "not found" in output
-            
+
             # Verify that sys.exit was called with exit code 1
             mock_exit.assert_called_once_with(1)

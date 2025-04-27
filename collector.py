@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-File Collector Script
+File Collector Script.
 
 This script recursively searches through directories starting from the current directory,
-finds all files (excluding specified binary/media formats), and collects their content into 
+finds all files (excluding specified binary/media formats), and collects their content into
 a single text file with file paths and separators for better readability.
 """
 
@@ -93,11 +93,11 @@ def collect_code(root_dir='.', output_file='code_collection.txt', exclude_extens
     
     # Write summary at the end of the file
     with open(output_file, 'a', encoding='utf-8') as outfile:
-        outfile.write(f"\nSUMMARY\n")
+        outfile.write("\nSUMMARY\n")
         outfile.write(f"Total files processed: {total_files}\n")
         outfile.write(f"Total lines of code: {total_lines}\n")
     
-    print(f"\nCollection complete!")
+    print("\nCollection complete!")
     print(f"Processed {total_files} files with {total_lines} lines of code")
     print(f"Output saved to: {os.path.abspath(output_file)}")
 
