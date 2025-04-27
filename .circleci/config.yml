@@ -1,0 +1,52 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@2.1
+
+jobs:
+  build-and-test:
+    docker:
+      - image: cimg/python:3.12
+    steps:
+      - checkout
+      - run:
+          name: Install uv
+          command: |
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+            echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
+            source $BASH_ENV
+      - run:
+          name: Run tests with installed packages
+          command: |
+            uv venv
+            source .venv/bin/activate
+            
+            # Install packages individually to avoid project-level build issues
+            uv pip install -e my_inbox_api
+            uv pip install -e my_inbox_impl
+            uv pip install coverage ruff pytest
+            
+            # Run linting
+            ruff check --fix --unsafe-fixes .
+            ruff check .
+            
+            # Create directory for test results
+            mkdir -p test-results
+            
+            # Run tests and generate coverage reports
+            coverage run -m pytest my_inbox_api/tests/ --junitxml=test-results/junit.xml
+            coverage report --fail-under=90 
+            coverage xml
+            coverage json -o test-results/coverage.json
+      - store_test_results:
+          path: test-results
+      - store_artifacts: 
+          path: htmlcov
+      - store_artifacts:
+          path: coverage.xml
+          destination: coverage-report
+
+workflows:
+  main:
+    jobs:
+      - build-and-test
