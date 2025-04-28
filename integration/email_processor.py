@@ -1,5 +1,5 @@
 """
-Email Processing Module
+Email Processing Module.
 
 Provides utility functions for processing emails with AI assistance.
 """
@@ -149,7 +149,7 @@ def generate_email_response_template(
 
 def analyze_sentiment(email_body: str) -> str:
     """
-    Simple rule-based sentiment analysis function.
+    Perform sentiment analysis on the email body text.
     
     In a real integration, this would be done by the AI model.
     This is a simplified version for demonstration purposes.
@@ -164,10 +164,10 @@ def analyze_sentiment(email_body: str) -> str:
     text = email_body.lower()
     
     # Simple positive and negative word lists
-    positive_words = ['thank', 'thanks', 'appreciate', 'good', 'great', 'excellent', 
+    positive_words = ['thank', 'thanks', 'appreciate', 'good', 'great', 'excellent',
                       'happy', 'pleased', 'congratulations', 'love', 'like', 'enjoy']
     
-    negative_words = ['issue', 'problem', 'complaint', 'error', 'fail', 'sorry', 
+    negative_words = ['issue', 'problem', 'complaint', 'error', 'fail', 'sorry',
                       'broken', 'unhappy', 'disappointed', 'bad', 'terrible', 'hate']
     
     # Count word occurrences
@@ -202,7 +202,7 @@ def extract_action_items(email_body: str) -> List[str]:
     
     # Action item indicators
     action_indicators = [
-        'please', 'kindly', 'could you', 'can you', 'would you', 
+        'please', 'kindly', 'could you', 'can you', 'would you',
         'need to', 'should', 'must', 'required', 'deadline',
         'by tomorrow', 'asap', 'as soon as possible', 'urgent',
         'action required', 'to-do', 'todo', 'action item'

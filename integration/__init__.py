@@ -2,7 +2,7 @@
 """
 AI Email Assistant Integration Package.
 
-This package integrates the Cerebras AI Conversation Client with 
+This package integrates the Cerebras AI Conversation Client with
 MyInbox email implementation.
 """
 

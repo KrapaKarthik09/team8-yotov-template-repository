@@ -1,6 +1,4 @@
-"""
-Integration tests for the AI Email Assistant.
-"""
+"""Integration tests for the AI Email Assistant."""
 
 import os
 import sys
@@ -13,7 +11,7 @@ import json
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from ai_email_assistant import AIEmailAssistant
-from email_processor import (extract_entities, extract_dates, 
+from email_processor import (extract_entities, extract_dates,
                             format_email_for_ai, generate_email_response_template)
 
 

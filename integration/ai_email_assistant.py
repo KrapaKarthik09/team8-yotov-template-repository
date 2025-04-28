@@ -1,5 +1,5 @@
 """
-AI Email Assistant Integration
+AI Email Assistant Integration.
 
 This module integrates the Cerebras AI Conversation Client with MyInbox
 email implementation to create an AI-powered email assistant.
@@ -29,7 +29,7 @@ class AIEmailAssistant:
     """
     
     def __init__(
-        self, 
+        self,
         use_mock: bool = True,
         ai_client_name: str = "mock",
         imap_config: Optional[Dict[str, str]] = None
@@ -38,7 +38,7 @@ class AIEmailAssistant:
         Initialize the AI Email Assistant.
         
         Args:
-            use_mock: Whether to use mock data for emails (True) or connect to 
+            use_mock: Whether to use mock data for emails (True) or connect to
                      real email server (False)
             ai_client_name: The AI client to use ("cerebras" or "mock")
             imap_config: Configuration for IMAP connection, required if use_mock is False
@@ -252,14 +252,12 @@ class AIEmailAssistant:
             
             # Try to extract a numeric score from the response
             try:
-                # Extract numeric characters from the response
                 score_text = ''.join([c for c in response["response"] if c.isdigit()])
                 score = int(score_text) if score_text else 50  # Default to 50 if parsing fails
-                
-                # Ensure score is within range
-                score = max(0, min(100, score))
-            except:
+                score = max(0, min(100, score))  # Ensure score is within range
+            except (ValueError, TypeError):
                 score = 50  # Default score if parsing fails
+
             
             enhanced_results.append({
                 "id": msg.id,
@@ -327,15 +325,14 @@ class AIEmailAssistant:
         return folder
     
     def close(self) -> None:
-        """
-        Close all active sessions and connections.
-        """
+        """Close all active sessions and connections."""
         # End all AI sessions
         for email_id, session_id in self.active_sessions.items():
             try:
                 self.ai_client.end_session(session_id)
-            except:
-                pass
+            except Exception as e:  # Catch general exceptions, but log them or handle accordingly
+                print(f"Failed to end session for {session_id}: {e}")
+
         
         # Clear active sessions
         self.active_sessions.clear()

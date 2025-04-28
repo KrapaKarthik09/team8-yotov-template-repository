@@ -1,7 +1,7 @@
 """
 Demo script for the AI Email Assistant integration.
 
-This script demonstrates the integration between the AI Conversation Client 
+This script demonstrates the integration between the AI Conversation Client
 and MyInbox email implementation.
 """
 
@@ -132,7 +132,7 @@ def demo_with_config(config_path: str):
 
 
 def main():
-    """Main entry point for the demo."""
+    """Run the main entry point for the demo."""
     parser = argparse.ArgumentParser(description="AI Email Assistant Demo")
     parser.add_argument("--config", help="Path to configuration file")
     parser.add_argument("--create-config", help="Create default configuration file at specified path")

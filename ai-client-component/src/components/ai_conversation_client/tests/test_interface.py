@@ -13,8 +13,7 @@ from components.ai_conversation_client.interface import AIConversationClientInte
 
 @pytest.fixture
 def mock_interface() -> AIConversationClientInterface:
-    """
-    Fixture to create a mock AIConversationClientInterface instance.
+    """Fixture to create a mock AIConversationClientInterface instance.
 
     Returns:
         A mock object adhering to the AIConversationClientInterface.

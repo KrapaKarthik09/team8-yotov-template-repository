@@ -1,7 +1,5 @@
 # tests/test_email_processor.py
-"""
-Unit tests for the email processor module.
-"""
+"""Unit tests for the email processor module."""
 
 import os
 import sys

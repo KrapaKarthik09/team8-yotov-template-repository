@@ -1,6 +1,4 @@
-"""
-Configuration settings for the AI Email Assistant integration.
-"""
+"""Configuration settings for the AI Email Assistant integration."""
 
 import os
 from typing import Dict, Any, Optional
