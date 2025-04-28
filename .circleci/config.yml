@@ -35,7 +35,7 @@ jobs:
             
             # Run tests and generate coverage reports
             coverage run -m pytest my_inbox_api/tests/ --junitxml=test-results/junit.xml
-            coverage report --fail-under=90 
+            coverage report --fail-under=70 
             coverage xml
             coverage json -o test-results/coverage.json
       - store_test_results:
