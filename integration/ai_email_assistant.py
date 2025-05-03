@@ -5,8 +5,6 @@ This module integrates the Cerebras AI Conversation Client with MyInbox
 email implementation to create an AI-powered email assistant.
 """
 
-import os
-import json
 from typing import Dict, List, Optional, Union
 from datetime import datetime
 
