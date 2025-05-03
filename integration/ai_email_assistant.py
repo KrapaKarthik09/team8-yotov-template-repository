@@ -111,14 +111,11 @@ class AIEmailAssistant:
         messages = list(self.email_client.get_messages())
         
         # Find the specific email
-        target_email = None
-        for msg in messages:
-            if msg.id == email_id:
-                target_email = msg
-                break
-                
+        target_email = next((msg for msg in messages if msg.id == email_id), None)
+        
         if not target_email:
             raise ValueError(f"Email with ID {email_id} not found")
+
         
         # Create or retrieve an AI session for this email
         if email_id not in self.active_sessions:
