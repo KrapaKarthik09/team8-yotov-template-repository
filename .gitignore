@@ -15,6 +15,7 @@ build/
 venv/
 .env
 .venv
+*venv*
 
 # IDEs
 .vscode/
@@ -36,10 +37,10 @@ coverage.xml
 .coveragerc
 
 #ruff
-.ruff_cache
+*ruff_cache*
 
 # mypy
-.mypy_cache/
+*mypy_cache*
 
 echo "__pycache__/" >> .gitignore
 echo "*.pyc" >> .gitignore
