@@ -25,6 +25,7 @@ def assistant():
 
 @pytest.fixture
 def email_ids(assistant):
+    """Return a list of email IDs for testing"""
     # Ensure we have emails to work with
     return assistant.fetch_emails(count=5)
     
