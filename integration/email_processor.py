@@ -6,11 +6,16 @@ Provides utility functions for processing emails with AI assistance.
 
 import re
 from typing import Dict, List, Any
-from datetime import datetime
 
-# Regex patterns for email extraction
-EMAIL_PATTERN = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
-URL_PATTERN = r'https?://[^\s]+'
+# Import constants
+from .email_constants import (
+    EMAIL_PATTERN,
+    URL_PATTERN,
+    DATE_PATTERNS,
+    POSITIVE_WORDS,
+    NEGATIVE_WORDS,
+    ACTION_INDICATORS
+)
 
 
 def extract_entities(email_body: str) -> Dict[str, List[str]]:
@@ -45,20 +50,8 @@ def extract_dates(text: str) -> List[str]:
     Returns:
         List of date strings found in the text
     """
-    # Common date patterns
-    patterns = [
-        # MM/DD/YYYY
-        r'\b\d{1,2}/\d{1,2}/\d{2,4}\b',
-        # Month DD, YYYY
-        r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2},? \d{4}\b',
-        # DD Month YYYY
-        r'\b\d{1,2} (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{4}\b',
-        # YYYY-MM-DD
-        r'\b\d{4}-\d{1,2}-\d{1,2}\b'
-    ]
-    
     dates = []
-    for pattern in patterns:
+    for pattern in DATE_PATTERNS:
         dates.extend(re.findall(pattern, text, re.IGNORECASE))
     
     return dates
@@ -163,16 +156,9 @@ def analyze_sentiment(email_body: str) -> str:
     # Convert to lowercase for case-insensitive matching
     text = email_body.lower()
     
-    # Simple positive and negative word lists
-    positive_words = ['thank', 'thanks', 'appreciate', 'good', 'great', 'excellent',
-                      'happy', 'pleased', 'congratulations', 'love', 'like', 'enjoy']
-    
-    negative_words = ['issue', 'problem', 'complaint', 'error', 'fail', 'sorry',
-                      'broken', 'unhappy', 'disappointed', 'bad', 'terrible', 'hate']
-    
     # Count word occurrences
-    positive_count = sum(1 for word in positive_words if word in text)
-    negative_count = sum(1 for word in negative_words if word in text)
+    positive_count = sum(1 for word in POSITIVE_WORDS if word in text)
+    negative_count = sum(1 for word in NEGATIVE_WORDS if word in text)
     
     # Determine sentiment
     if positive_count > negative_count:
@@ -200,19 +186,11 @@ def extract_action_items(email_body: str) -> List[str]:
     text = email_body.lower()
     sentences = re.split(r'[.!?]+', text)
     
-    # Action item indicators
-    action_indicators = [
-        'please', 'kindly', 'could you', 'can you', 'would you',
-        'need to', 'should', 'must', 'required', 'deadline',
-        'by tomorrow', 'asap', 'as soon as possible', 'urgent',
-        'action required', 'to-do', 'todo', 'action item'
-    ]
-    
     # Extract sentences that likely contain action items
     action_items = []
     for sentence in sentences:
         sentence = sentence.strip()
-        if sentence and any(indicator in sentence for indicator in action_indicators):
+        if sentence and any(indicator in sentence for indicator in ACTION_INDICATORS):
             # Capitalize first letter and add period
             formatted_sentence = sentence[0].upper() + sentence[1:] + '.'
             action_items.append(formatted_sentence)
