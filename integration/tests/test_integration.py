@@ -27,7 +27,6 @@ def output_csv():
 
 def test_spam_detection_with_csv_output(assistant, output_csv):
     """Test spam detection and output results to CSV."""
-    
     # Fetch emails for testing
     email_ids = assistant.fetch_emails(count=10)  # Adjust count as needed
     
@@ -115,27 +114,26 @@ def test_spam_detection_with_csv_output(assistant, output_csv):
 
 def test_spam_detection_with_mock_data(assistant, output_csv, mocker):
     """Test spam detection with mock data and produce CSV output."""
-    
     # Mock email data
     mock_emails = [
-        {'id': 'email1', 'from': 'prince@nigeria.com', 'to': 'victim@example.com', 
-         'subject': 'URGENT: Claim Your $1M Prize!!!', 
+        {'id': 'email1', 'from': 'prince@nigeria.com', 'to': 'victim@example.com',
+         'subject': 'URGENT: Claim Your $1M Prize!!!',
          'body': 'You have won millions! Send bank details now!'},
-        {'id': 'email2', 'from': 'coworker@company.com', 'to': 'me@company.com', 
-         'subject': 'Meeting tomorrow', 
+        {'id': 'email2', 'from': 'coworker@company.com', 'to': 'me@company.com',
+         'subject': 'Meeting tomorrow',
          'body': 'Hi, can we reschedule our meeting to 3 PM?'},
-        {'id': 'email3', 'from': 'pharmacy@spam.com', 'to': 'anyone@example.com', 
-         'subject': 'Cheap meds online', 
+        {'id': 'email3', 'from': 'pharmacy@spam.com', 'to': 'anyone@example.com',
+         'subject': 'Cheap meds online',
          'body': 'Buy discounted medications without prescription!'},
-        {'id': 'email4', 'from': 'mom@family.com', 'to': 'me@example.com', 
-         'subject': 'Happy Birthday!', 
+        {'id': 'email4', 'from': 'mom@family.com', 'to': 'me@example.com',
+         'subject': 'Happy Birthday!',
          'body': 'Hope you have a wonderful birthday!'},
     ]
     
     # Mock methods
-    mocker.patch.object(assistant, 'fetch_emails', 
+    mocker.patch.object(assistant, 'fetch_emails',
                        return_value=['email1', 'email2', 'email3', 'email4'])
-    mocker.patch.object(assistant, 'get_email', 
+    mocker.patch.object(assistant, 'get_email',
                        side_effect=lambda id: next(e for e in mock_emails if e['id'] == id))
     
     # Mock AI responses with realistic spam scores
@@ -146,13 +144,13 @@ def test_spam_detection_with_mock_data(assistant, output_csv, mocker):
         'email4': '2'    # Legitimate email
     }
     
-    def mock_generate_response(prompt):
+    def mock_generate_response(prompt) -> str:
         for email_id, score in mock_responses.items():
             if email_id in prompt:
                 return f"The spam probability is {score}%"
         return "50"  # Default score
     
-    mocker.patch.object(assistant.ai_client, 'generate_response', 
+    mocker.patch.object(assistant.ai_client, 'generate_response',
                        side_effect=mock_generate_response)
     
     # Run spam detection
@@ -199,8 +197,7 @@ def test_spam_detection_with_mock_data(assistant, output_csv, mocker):
 
 # Helper function for spam detection
 def detect_spam(assistant, email_data):
-    """
-    Helper function to detect spam in an email.
+    """Detect spam in an email.
     
     Args:
         assistant: AIEmailAssistant instance
