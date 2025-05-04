@@ -1,0 +1,12 @@
+[run]
+source = my_inbox_api
+omit = my_inbox_api/tests/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    pass
+    raise ImportError
