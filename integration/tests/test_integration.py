@@ -65,8 +65,8 @@ def test_spam_detection_with_csv_output(assistant, output_csv):
                 elif pct_spam < 0:
                     pct_spam = 0
             except ValueError:
-                # If extraction fails, assign random value for testing
-                pct_spam = random.uniform(0, 100)
+                #making the test fail when parsing fails
+                pytest.fail(f"Failed to parse spam percentage from response: {response}")
             
             results.append({
                 'mail_id': email_id,
