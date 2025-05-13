@@ -1,10 +1,6 @@
 # PR Coverage Analyzer
 ## Team 8 [Extra Credit]
 
-[![CircleCI](https://circleci.com/gh/username/pr-coverage-analyzer.svg?style=shield)](https://circleci.com/gh/username/pr-coverage-analyzer)
-[![PyPI version](https://badge.fury.io/py/pr-coverage-analyzer.svg)](https://badge.fury.io/py/pr-coverage-analyzer)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 A tool to analyze code coverage changes in Pull Requests by comparing coverage before and after the changes.
 
 ## Features
