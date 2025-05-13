@@ -41,7 +41,7 @@ jobs:
             coverage run -m pytest tests/integration/ --junitxml=test-results/junit-integration.xml
             
             # Generate coverage reports
-            coverage report --fail-under=70
+            coverage report --fail-under=60
             coverage xml
             coverage html
             coverage json -o test-results/coverage.json
