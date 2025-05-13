@@ -1,0 +1,64 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@2.1
+
+jobs:
+  build-and-test:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          packages:
+            - ".[dev]"
+      - run:
+          name: Run tests
+          command: pytest --cov
+      - run:
+          name: Lint code
+          command: |
+            black --check pr_coverage_analyzer
+            isort --check pr_coverage_analyzer
+            flake8 pr_coverage_analyzer
+      
+  analyze-pr:
+    docker:
+      - image: cimg/python:3.10
+    parameters:
+      pr_url:
+        type: string
+        default: ""
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          packages:
+            - "."
+      - run:
+          name: Analyze PR Coverage
+          command: |
+            if [[ -n "<< parameters.pr_url >>" ]]; then
+              pr-coverage --pr-url << parameters.pr_url >> --markdown-output coverage-report.md
+            else
+              pr-coverage --markdown-output coverage-report.md
+            fi
+      - store_artifacts:
+          path: coverage-report.md
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - build-and-test
+  pr-analysis:
+    jobs:
+      - analyze-pr:
+          pr_url: << pipeline.parameters.pr_url >>
+
+# Pipeline parameters for manual triggering with PR URL
+parameters:
+  pr_url:
+    type: string
+    default: ""
