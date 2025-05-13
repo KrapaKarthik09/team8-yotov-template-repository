@@ -262,3 +262,26 @@ def mock_coverage_files(sample_project_files, sample_coverage_data, sample_cover
         json.dump(sample_coverage_data_updated, f)
     
     return repo_dir
+    
+@pytest.fixture
+def sample_results():
+    """Sample results for testing."""
+    return {
+        "overall": {
+            "base_percentage": 75.0,
+            "current_percentage": 87.5,
+            "base_covered": 6,
+            "base_total": 8,
+            "current_covered": 7,
+            "current_total": 8
+        },
+        "sample_project/calculator.py": {
+            "base_percentage": 75.0,
+            "current_percentage": 87.5,
+            "line_changes": {
+                16: {"before": None, "after": True},
+                17: {"before": None, "after": True},
+                18: {"before": None, "after": True}
+            }
+        }
+    }
