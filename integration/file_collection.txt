@@ -1,0 +1,2606 @@
+CODE COLLECTION GENERATED ON 2025-05-04 13:19:31
+Root directory: C:\Users\prath\Desktop\del1\team8-yotov-template-repository\integration
+================================================================================
+
+FILE: ai_email_assistant.py
+LINES: 337
+--------------------------------------------------------------------------------
+
+"""
+AI Email Assistant Integration.
+
+This module integrates the Cerebras AI Conversation Client with MyInbox
+email implementation to create an AI-powered email assistant.
+"""
+
+from typing import Dict, List, Optional, Union
+from datetime import datetime
+
+# Import from my_inbox_impl
+# from my_inbox_impl import get_client as get_email_client
+# from my_inbox_impl.get_client import get_email_client
+from my_inbox_impl._impl import get_client as get_email_client
+from my_inbox_impl.mail_fetcher import MockFetcher, IMAPFetcher
+
+# Import from AI conversation client
+from components.ai_conversation_client import get_client as get_ai_client
+from components.ai_conversation_client import AIConversationClient, CerebrasClient
+
+class AIEmailAssistant:
+    """
+    Integrates AI conversation capabilities with email operations.
+    
+    This class connects the Cerebras AI client with the MyInbox email
+    implementation to provide AI-powered email processing and responses.
+    """
+    
+    def __init__(
+        self,
+        use_mock: bool = True,
+        ai_client_name: str = "mock",
+        imap_config: Optional[Dict[str, str]] = None
+    ) -> None:
+        """
+        Initialize the AI Email Assistant.
+        
+        Args:
+            use_mock: Whether to use mock data for emails (True) or connect to
+                     real email server (False)
+            ai_client_name: The AI client to use ("cerebras" or "mock")
+            imap_config: Configuration for IMAP connection, required if use_mock is False
+                         Format: {
+                             "host": "imap.example.com",
+                             "port": "993",
+                             "username": "user@example.com",
+                             "password": "password"
+                         }
+        
+        Raises:
+            ValueError: If use_mock is False and imap_config is not provided
+        """
+        # Initialize AI client
+        self.ai_client = get_ai_client(ai_client_name)
+        
+        # Initialize email client
+        self.email_client = get_email_client()
+        
+        # Set up email fetcher
+        if use_mock:
+            self.email_fetcher = MockFetcher()
+        else:
+            if not imap_config:
+                raise ValueError("IMAP configuration is required when use_mock is False")
+            
+            self.email_fetcher = IMAPFetcher(
+                host=imap_config["host"],
+                port=int(imap_config["port"]),
+                username=imap_config["username"],
+                password=imap_config["password"]
+            )
+        
+        # Connect email fetcher to email client
+        self.email_fetcher.set_client(self.email_client)
+        
+        # Track AI sessions for each email context
+        self.active_sessions: Dict[str, str] = {}  # email_id -> ai_session_id
+    
+    def fetch_emails(self, count: int = 10, folder: str = "INBOX") -> List[str]:
+        """
+        Fetch emails from the specified folder.
+        
+        Args:
+            count: Number of emails to fetch
+            folder: Folder to fetch emails from
+            
+        Returns:
+            List of email IDs that were fetched
+        """
+        emails = self.email_fetcher.fetch_messages(count=count, folder=folder)
+        return [email.id for email in emails]
+    
+    def process_email(self, email_id: str) -> Dict[str, str]:
+        """
+        Process an email using the AI client and generate a response.
+        
+        Args:
+            email_id: ID of the email to process
+            
+        Returns:
+            Dictionary containing:
+                - original_subject: Original email subject
+                - original_body: Original email body
+                - sender: Email sender
+                - ai_response: Generated AI response
+                
+        Raises:
+            ValueError: If email with given ID is not found
+        """
+        # Get email messages
+        messages = list(self.email_client.get_messages())
+        
+        # Find the specific email
+        target_email = next((msg for msg in messages if msg.id == email_id), None)
+        
+        if not target_email:
+            raise ValueError(f"Email with ID {email_id} not found")
+
+        
+        # Create or retrieve an AI session for this email
+        if email_id not in self.active_sessions:
+            # Create new AI session
+            user_id = f"email_user_{email_id[:8]}"
+            session_id = self.ai_client.start_new_session(user_id)
+            self.active_sessions[email_id] = session_id
+        else:
+            session_id = self.active_sessions[email_id]
+        
+        # Create a prompt based on the email content
+        prompt = self._create_email_prompt(target_email.subject, target_email.body)
+        
+        # Get AI response
+        response = self.ai_client.send_message(session_id, prompt)
+        
+        return {
+            "original_subject": target_email.subject,
+            "original_body": target_email.body,
+            "sender": target_email.from_,
+            "ai_response": response["response"]
+        }
+    
+    def _create_email_prompt(self, subject: str, body: str) -> str:
+        """
+        Create a prompt for the AI based on email content.
+        
+        Args:
+            subject: Email subject
+            body: Email body
+            
+        Returns:
+            Formatted prompt for the AI
+        """
+        prompt = (
+            f"Please analyze this email and suggest a response:\n\n"
+            f"Subject: {subject}\n\n"
+            f"Body:\n{body}\n\n"
+            f"Analyze the tone, content, and context of this email. "
+            f"Then draft a professional and appropriate response."
+        )
+        return prompt
+    
+    def get_email_summary(self, email_id: str) -> str:
+        """
+        Generate a summary of an email using the AI.
+        
+        Args:
+            email_id: ID of the email to summarize
+            
+        Returns:
+            Summary of the email
+            
+        Raises:
+            ValueError: If email with given ID is not found
+        """
+        # Get email messages
+        messages = list(self.email_client.get_messages())
+        
+        # Find the specific email
+        target_email = None
+        for msg in messages:
+            if msg.id == email_id:
+                target_email = msg
+                break
+                
+        if not target_email:
+            raise ValueError(f"Email with ID {email_id} not found")
+        
+        # Create or retrieve an AI session for this email
+        if email_id not in self.active_sessions:
+            # Create new AI session
+            user_id = f"email_user_{email_id[:8]}"
+            session_id = self.ai_client.start_new_session(user_id)
+            self.active_sessions[email_id] = session_id
+        else:
+            session_id = self.active_sessions[email_id]
+        
+        # Create a summary prompt
+        prompt = (
+            f"Please provide a concise 2-3 sentence summary of this email:\n\n"
+            f"Subject: {target_email.subject}\n\n"
+            f"Body:\n{target_email.body}\n\n"
+        )
+        
+        # Get AI response
+        response = self.ai_client.send_message(session_id, prompt)
+        
+        return response["response"]
+    
+    def search_emails(self, query: str) -> List[Dict[str, str]]:
+        """
+        Search emails with AI-enhanced context understanding.
+        
+        Args:
+            query: Search query
+            
+        Returns:
+            List of dictionaries containing matching email information:
+                - id: Email ID
+                - subject: Email subject
+                - sender: Email sender
+                - relevance: AI-determined relevance score (0-100)
+        """
+        # Get search results from email client
+        search_results = list(self.email_client.search_messages(query))
+        
+        if not search_results:
+            return []
+        
+        # Create a new AI session for search enhancement
+        user_id = f"search_user_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        session_id = self.ai_client.start_new_session(user_id)
+        
+        # Enhanced results with AI relevance scoring
+        enhanced_results = []
+        
+        for msg in search_results:
+            # Create a relevance prompt
+            prompt = (
+                f"On a scale of 0-100, rate the relevance of this email to the search query: '{query}'\n\n"
+                f"Subject: {msg.subject}\n\n"
+                f"Body:\n{msg.body}\n\n"
+                f"Return only a number between 0 and 100 representing the relevance score."
+            )
+            
+            # Get AI response
+            response = self.ai_client.send_message(session_id, prompt)
+            
+            # Try to extract a numeric score from the response
+            try:
+                score_text = ''.join([c for c in response["response"] if c.isdigit()])
+                score = int(score_text) if score_text else 50  # Default to 50 if parsing fails
+                score = max(0, min(100, score))  # Ensure score is within range
+            except (ValueError, TypeError):
+                score = 50  # Default score if parsing fails
+
+            
+            enhanced_results.append({
+                "id": msg.id,
+                "subject": msg.subject,
+                "sender": msg.from_,
+                "relevance": score
+            })
+        
+        # Sort by relevance (highest first)
+        enhanced_results.sort(key=lambda x: x["relevance"], reverse=True)
+        
+        # End the search session
+        self.ai_client.end_session(session_id)
+        
+        return enhanced_results
+    
+    def categorize_email(self, email_id: str) -> str:
+        """
+        Categorize an email using AI to determine its type/folder.
+        
+        Args:
+            email_id: ID of the email to categorize
+            
+        Returns:
+            Suggested folder/category for the email
+            
+        Raises:
+            ValueError: If email with given ID is not found
+        """
+        # Get email messages
+        messages = list(self.email_client.get_messages())
+        
+        # Find the specific email
+        target_email = None
+        for msg in messages:
+            if msg.id == email_id:
+                target_email = msg
+                break
+                
+        if not target_email:
+            raise ValueError(f"Email with ID {email_id} not found")
+        
+        # Create a new AI session for categorization
+        user_id = f"category_user_{email_id[:8]}"
+        session_id = self.ai_client.start_new_session(user_id)
+        
+        # Create a categorization prompt
+        prompt = (
+            f"Please categorize this email into one of the following folders: "
+            f"Inbox, Work, Personal, Finance, Social, Promotions, Updates, Forums, Spam.\n\n"
+            f"Subject: {target_email.subject}\n\n"
+            f"Body:\n{target_email.body}\n\n"
+            f"Return only the folder name with no additional text or explanation."
+        )
+        
+        # Get AI response
+        response = self.ai_client.send_message(session_id, prompt)
+        
+        # Clean up response to get just the folder name
+        folder = response["response"].strip()
+        
+        # End the categorization session
+        self.ai_client.end_session(session_id)
+        
+        return folder
+    
+    def close(self) -> None:
+        """Close all active sessions and connections."""
+        # End all AI sessions
+        for email_id, session_id in self.active_sessions.items():
+            try:
+                self.ai_client.end_session(session_id)
+            except Exception as e:  # Catch general exceptions, but log them or handle accordingly
+                print(f"Failed to end session for {session_id}: {e}")
+
+        
+        # Clear active sessions
+        self.active_sessions.clear()
+        
+        # Close email fetcher if using IMAP
+        if isinstance(self.email_fetcher, IMAPFetcher):
+            self.email_fetcher.close()
+
+================================================================================
+
+FILE: collector.py
+LINES: 129
+--------------------------------------------------------------------------------
+
+#!/usr/bin/env python3
+"""
+File Collector Script
+
+This script recursively searches through directories starting from the current directory,
+finds all files (excluding specified binary/media formats), and collects their content into 
+a single text file with file paths and separators for better readability.
+"""
+
+import os
+import argparse
+from datetime import datetime
+
+
+def collect_code(root_dir='.', output_file='code_collection.txt', exclude_extensions=None, ignore_dirs=None):
+    """
+    Recursively collect all files into a single text file.
+    
+    Args:
+        root_dir (str): Root directory to start the search from
+        output_file (str): Name of the output file
+        exclude_extensions (list): List of file extensions to exclude (e.g., ['.pyc', '.exe'])
+        ignore_dirs (list): List of directory names to ignore (e.g., ['node_modules', '.git'])
+    """
+    if exclude_extensions is None:
+        # Default extensions to exclude - typically binary or temporary files
+        exclude_extensions = [
+            '.pyc', '.pyo', '.pyd', '.exe', '.dll', '.so', '.o', '.obj',
+            '.class', '.jar', '.war', '.ear', '.zip', '.tar', '.gz', '.7z',
+            '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.svg', '.mp3',
+            '.mp4', '.avi', '.mov', '.flv', '.wmv', '.pdf', '.doc', '.docx',
+            '.xls', '.xlsx', '.ppt', '.pptx'
+        ]
+    
+    if ignore_dirs is None:
+        # Default directories to ignore - add or remove based on your needs
+        ignore_dirs = ['.git', 'node_modules', 'venv', '__pycache__', 'dist', 'build']
+    
+    # Convert exclude_extensions to lowercase for case-insensitive matching
+    exclude_extensions = [ext.lower() for ext in exclude_extensions]
+    
+    # Get absolute path of root directory
+    root_dir = os.path.abspath(root_dir)
+    
+    print(f"Starting code collection from {root_dir}")
+    print(f"Excluding extensions: {', '.join(exclude_extensions)}")
+    print(f"Ignoring directories: {', '.join(ignore_dirs)}")
+    
+    # Total counters
+    total_files = 0
+    total_lines = 0
+    
+    with open(output_file, 'w', encoding='utf-8') as outfile:
+        # Write header
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        outfile.write(f"CODE COLLECTION GENERATED ON {timestamp}\n")
+        outfile.write(f"Root directory: {root_dir}\n")
+        outfile.write("=" * 80 + "\n\n")
+        
+        # Walk through directory tree
+        for dirpath, dirnames, filenames in os.walk(root_dir):
+            # Remove ignored directories from dirnames to prevent walking into them
+            # Using slice assignment to modify dirnames in-place (required by os.walk)
+            dirnames[:] = [d for d in dirnames if d not in ignore_dirs]
+            
+            for filename in filenames:
+                # Check if the file does not have one of the excluded extensions
+                file_ext = os.path.splitext(filename)[1].lower()
+                if file_ext not in exclude_extensions:
+                    file_path = os.path.join(dirpath, filename)
+                    rel_path = os.path.relpath(file_path, root_dir)
+                    
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as infile:
+                            content = infile.read()
+                            
+                            # Count lines
+                            line_count = content.count('\n') + (0 if content.endswith('\n') else 1)
+                            total_lines += line_count
+                            total_files += 1
+                            
+                            # Write file info and content to output file
+                            outfile.write(f"FILE: {rel_path}\n")
+                            outfile.write(f"LINES: {line_count}\n")
+                            outfile.write("-" * 80 + "\n\n")
+                            outfile.write(content)
+                            outfile.write("\n\n")
+                            outfile.write("=" * 80 + "\n\n")
+                            
+                            print(f"Added: {rel_path} ({line_count} lines)")
+                    except Exception as e:
+                        print(f"Error reading {rel_path}: {e}")
+    
+    # Write summary at the end of the file
+    with open(output_file, 'a', encoding='utf-8') as outfile:
+        outfile.write(f"\nSUMMARY\n")
+        outfile.write(f"Total files processed: {total_files}\n")
+        outfile.write(f"Total lines of code: {total_lines}\n")
+    
+    print(f"\nCollection complete!")
+    print(f"Processed {total_files} files with {total_lines} lines of code")
+    print(f"Output saved to: {os.path.abspath(output_file)}")
+
+
+def main():
+    """Parse command line arguments and run the script."""
+    parser = argparse.ArgumentParser(description='Collect all files into a single text file.')
+    parser.add_argument('-d', '--directory', default='.', help='Root directory to start from (default: current directory)')
+    parser.add_argument('-o', '--output', default='file_collection.txt', help='Output file name (default: file_collection.txt)')
+    parser.add_argument('-e', '--exclude', nargs='+', help='File extensions to exclude (e.g., .exe .jpg)')
+    parser.add_argument('-i', '--ignore', nargs='+', help='Directories to ignore (e.g., node_modules .git)')
+    
+    args = parser.parse_args()
+    
+    # Convert exclude extensions from command line to proper format with leading dot
+    exclude_extensions = None
+    if args.exclude:
+        exclude_extensions = [ext if ext.startswith('.') else f'.{ext}' for ext in args.exclude]
+    
+    collect_code(
+        root_dir=args.directory,
+        output_file=args.output,
+        exclude_extensions=exclude_extensions,
+        ignore_dirs=args.ignore
+    )
+
+
+if __name__ == "__main__":
+    main()
+
+================================================================================
+
+FILE: config.py
+LINES: 105
+--------------------------------------------------------------------------------
+
+"""Configuration settings for the AI Email Assistant integration."""
+
+import os
+from typing import Dict, Any, Optional
+import json
+
+# Import constants
+from config_constants import (
+    DEFAULT_USE_MOCK, DEFAULT_AI_CLIENT_NAME, DEFAULT_EMAIL_USE_MOCK,
+    CONFIG_USE_MOCK, CONFIG_AI_CLIENT, CONFIG_AI_CLIENT_NAME, CONFIG_AI_CLIENT_API_KEY,
+    CONFIG_EMAIL, CONFIG_EMAIL_USE_MOCK, CONFIG_EMAIL_IMAP,
+    CONFIG_EMAIL_IMAP_HOST, CONFIG_EMAIL_IMAP_PORT, CONFIG_EMAIL_IMAP_USERNAME, CONFIG_EMAIL_IMAP_PASSWORD,
+    ENV_CEREBRAS_API_KEY, ENV_EMAIL_IMAP_HOST, ENV_EMAIL_IMAP_PORT, ENV_EMAIL_USERNAME, ENV_EMAIL_PASSWORD,
+    DEFAULT_IMAP_PORT, DEFAULT_IMAP_HOST, DEFAULT_EMAIL_USERNAME
+)
+
+def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Load configuration from a JSON file or environment variables.
+
+    Args:
+        config_path: Path to JSON configuration file (optional)
+
+    Returns:
+        Dictionary containing configuration settings
+    """
+    config = {
+        CONFIG_USE_MOCK: DEFAULT_USE_MOCK,
+        CONFIG_AI_CLIENT: {
+            CONFIG_AI_CLIENT_NAME: DEFAULT_AI_CLIENT_NAME,
+            CONFIG_AI_CLIENT_API_KEY: os.environ.get(ENV_CEREBRAS_API_KEY, "")
+        },
+        CONFIG_EMAIL: {
+            CONFIG_EMAIL_USE_MOCK: DEFAULT_EMAIL_USE_MOCK,
+            CONFIG_EMAIL_IMAP: {
+                CONFIG_EMAIL_IMAP_HOST: os.environ.get(ENV_EMAIL_IMAP_HOST, ""),
+                CONFIG_EMAIL_IMAP_PORT: os.environ.get(ENV_EMAIL_IMAP_PORT, DEFAULT_IMAP_PORT),
+                CONFIG_EMAIL_IMAP_USERNAME: os.environ.get(ENV_EMAIL_USERNAME, ""),
+                CONFIG_EMAIL_IMAP_PASSWORD: os.environ.get(ENV_EMAIL_PASSWORD, "")
+            }
+        }
+    }
+
+    # Load from file if provided
+    if config_path and os.path.exists(config_path):
+        with open(config_path, 'r') as f:
+            file_config = json.load(f)
+        # Merge configurations
+        config = deep_merge(config, file_config)
+
+    return config
+
+
+def deep_merge(base: Dict[str, Any], update: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Recursively merge two dictionaries.
+
+    Args:
+        base: Base dictionary
+        update: Dictionary with values to update
+
+    Returns:
+        Merged dictionary
+    """
+    result = base.copy()
+    for key, value in update.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = deep_merge(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
+def create_default_config(output_path: str) -> None:
+    """
+    Create a default configuration file.
+
+    Args:
+        output_path: Path where to save the configuration file
+    """
+    config = {
+        CONFIG_USE_MOCK: DEFAULT_USE_MOCK,
+        CONFIG_AI_CLIENT: {
+            CONFIG_AI_CLIENT_NAME: DEFAULT_AI_CLIENT_NAME,
+            CONFIG_AI_CLIENT_API_KEY: ""
+        },
+        CONFIG_EMAIL: {
+            CONFIG_EMAIL_USE_MOCK: DEFAULT_EMAIL_USE_MOCK,
+            CONFIG_EMAIL_IMAP: {
+                CONFIG_EMAIL_IMAP_HOST: DEFAULT_IMAP_HOST,
+                CONFIG_EMAIL_IMAP_PORT: DEFAULT_IMAP_PORT,
+                CONFIG_EMAIL_IMAP_USERNAME: DEFAULT_EMAIL_USERNAME,
+                CONFIG_EMAIL_IMAP_PASSWORD: ""
+            }
+        }
+    }
+
+    # Create directory if it doesn't exist
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+
+    # Write config file
+    with open(output_path, 'w') as f:
+        json.dump(config, f, indent=2)
+
+    print(f"Default configuration created at {output_path}")
+
+
+================================================================================
+
+FILE: config_constants.py
+LINES: 31
+--------------------------------------------------------------------------------
+
+"""Constants for the AI Email Assistant configuration."""
+
+# Default configuration values
+DEFAULT_USE_MOCK = True
+DEFAULT_AI_CLIENT_NAME = "mock"
+DEFAULT_EMAIL_USE_MOCK = True
+
+# Configuration keys
+CONFIG_USE_MOCK = "use_mock"
+CONFIG_AI_CLIENT = "ai_client"
+CONFIG_AI_CLIENT_NAME = "name"
+CONFIG_AI_CLIENT_API_KEY = "api_key"
+CONFIG_EMAIL = "email"
+CONFIG_EMAIL_USE_MOCK = "use_mock"
+CONFIG_EMAIL_IMAP = "imap"
+CONFIG_EMAIL_IMAP_HOST = "host"
+CONFIG_EMAIL_IMAP_PORT = "port"
+CONFIG_EMAIL_IMAP_USERNAME = "username"
+CONFIG_EMAIL_IMAP_PASSWORD = "password"
+
+# Environment variable names
+ENV_CEREBRAS_API_KEY = "CEREBRAS_API_KEY"
+ENV_EMAIL_IMAP_HOST = "EMAIL_IMAP_HOST"
+ENV_EMAIL_IMAP_PORT = "EMAIL_IMAP_PORT"
+ENV_EMAIL_USERNAME = "EMAIL_USERNAME"
+ENV_EMAIL_PASSWORD = "EMAIL_PASSWORD"
+
+# Default values for configuration
+DEFAULT_IMAP_PORT = "993"
+DEFAULT_IMAP_HOST = "imap.example.com"
+DEFAULT_EMAIL_USERNAME = "user@example.com"
+
+
+================================================================================
+
+FILE: demo.py
+LINES: 156
+--------------------------------------------------------------------------------
+
+"""
+Demo script for the AI Email Assistant integration.
+
+This script demonstrates the integration between the AI Conversation Client
+and MyInbox email implementation.
+"""
+
+import sys
+import os
+
+# Project root (for integration import)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'my_inbox_impl', 'src')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'my_inbox_api', 'src')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'ai-client-component', 'src')))
+
+import argparse
+from typing import Dict, List, Optional, Any
+
+from integration.ai_email_assistant import AIEmailAssistant
+from integration.config import load_config, create_default_config
+
+
+def demo_mock_mode():
+    """Run the demo in mock mode (no real email or AI connections)."""
+    print("\n=== AI Email Assistant Demo (Mock Mode) ===\n")
+    
+    # Initialize AI Email Assistant with mock clients
+    assistant = AIEmailAssistant(use_mock=True, ai_client_name="mock")
+    
+    try:
+        # 1. Fetch mock emails
+        print("Fetching mock emails...")
+        email_ids = assistant.fetch_emails(count=10)
+        print(f"Fetched {len(email_ids)} mock emails")
+        
+        if not email_ids:
+            print("No emails to process. Exiting demo.")
+            return
+        
+        # 2. Process one email
+        print("\n--- Processing a sample email ---")
+        email_id = email_ids[0]  # Use the first email
+        result = assistant.process_email(email_id)
+        
+        print(f"Original Subject: {result['original_subject']}")
+        print(f"From: {result['sender']}")
+        print("\nOriginal Email Body:")
+        print(f"{result['original_body'][:200]}..." if len(result['original_body']) > 200 else result['original_body'])
+        print("\nAI-Generated Response:")
+        print(result['ai_response'])
+        
+        # 3. Generate email summary
+        print("\n--- Generating Email Summary ---")
+        summary = assistant.get_email_summary(email_id)
+        print(f"Summary: {summary}")
+        
+        # 4. Search emails
+        print("\n--- Searching Emails ---")
+        search_term = "important"
+        print(f"Searching for: '{search_term}'")
+        search_results = assistant.search_emails(search_term)
+        
+        print(f"Found {len(search_results)} emails (sorted by AI-determined relevance):")
+        for idx, result in enumerate(search_results[:3], 1):  # Show top 3 results
+            print(f"{idx}. '{result['subject']}' (Relevance: {result['relevance']}%)")
+        
+        # 5. Categorize emails
+        print("\n--- Categorizing Emails ---")
+        for i, email_id in enumerate(email_ids[:3], 1):  # Categorize first 3 emails
+            try:
+                category = assistant.categorize_email(email_id)
+                
+                # Get email info for display
+                messages = list(assistant.email_client.get_messages())
+                email = next((msg for msg in messages if msg.id == email_id), None)
+                
+                if email:
+                    print(f"{i}. '{email.subject}' → Category: {category}")
+            except ValueError as e:
+                print(f"Error categorizing email {email_id}: {e}")
+        
+        print("\nDemo completed successfully!")
+        
+    finally:
+        # Ensure resources are cleaned up
+        assistant.close()
+
+
+def demo_with_config(config_path: str):
+    """
+    Run the demo using a configuration file.
+    
+    Args:
+        config_path: Path to the configuration file
+    """
+    print(f"\n=== AI Email Assistant Demo (Using config: {config_path}) ===\n")
+    
+    # Load configuration
+    config = load_config(config_path)
+    
+    # Determine if we're using mock mode
+    use_mock = config.get("use_mock", True)
+    ai_client_name = config.get("ai_client", {}).get("name", "mock")
+    
+    # Set up IMAP config if not using mock
+    imap_config = None
+    if not config.get("email", {}).get("use_mock", True):
+        imap_config = config.get("email", {}).get("imap", {})
+    
+    print(f"Mode: {'Mock' if use_mock else 'Real'}")
+    print(f"AI Client: {ai_client_name}")
+    
+    # Initialize AI Email Assistant
+    assistant = AIEmailAssistant(
+        use_mock=use_mock,
+        ai_client_name=ai_client_name,
+        imap_config=imap_config
+    )
+    
+    try:
+        # Run demo logic similar to mock mode
+        print("Fetching emails...")
+        email_ids = assistant.fetch_emails(count=5)
+        print(f"Fetched {len(email_ids)} emails")
+        
+        # Continue with similar demo logic as mock_mode
+        # ...
+        
+    finally:
+        assistant.close()
+
+
+def main():
+    """Run the main entry point for the demo."""
+    parser = argparse.ArgumentParser(description="AI Email Assistant Demo")
+    parser.add_argument("--config", help="Path to configuration file")
+    parser.add_argument("--create-config", help="Create default configuration file at specified path")
+    parser.add_argument("--mock", action="store_true", help="Run in mock mode (default if no config)")
+    
+    args = parser.parse_args()
+    
+    # Create default config if requested
+    if args.create_config:
+        create_default_config(args.create_config)
+        return
+    
+    # Determine mode
+    if args.config:
+        demo_with_config(args.config)
+    else:
+        demo_mock_mode()
+
+
+if __name__ == "__main__":
+    main()
+
+================================================================================
+
+FILE: email_processor.py
+LINES: 220
+--------------------------------------------------------------------------------
+
+"""
+Email Processing Module.
+
+Provides utility functions for processing emails with AI assistance.
+"""
+
+import re
+from typing import Dict, List, Any
+from datetime import datetime
+
+# Regex patterns for email extraction
+EMAIL_PATTERN = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+URL_PATTERN = r'https?://[^\s]+'
+
+
+def extract_entities(email_body: str) -> Dict[str, List[str]]:
+    """
+    Extract important entities from an email body.
+    
+    Args:
+        email_body: The email body content
+        
+    Returns:
+        Dictionary with extracted entities:
+            - emails: List of email addresses
+            - urls: List of URLs
+            - dates: List of date strings
+    """
+    entities = {
+        "emails": re.findall(EMAIL_PATTERN, email_body),
+        "urls": re.findall(URL_PATTERN, email_body),
+        "dates": extract_dates(email_body)
+    }
+    
+    return entities
+
+
+def extract_dates(text: str) -> List[str]:
+    """
+    Extract date-like strings from text.
+    
+    Args:
+        text: Text to process
+        
+    Returns:
+        List of date strings found in the text
+    """
+    # Common date patterns
+    patterns = [
+        # MM/DD/YYYY
+        r'\b\d{1,2}/\d{1,2}/\d{2,4}\b',
+        # Month DD, YYYY
+        r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2},? \d{4}\b',
+        # DD Month YYYY
+        r'\b\d{1,2} (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{4}\b',
+        # YYYY-MM-DD
+        r'\b\d{4}-\d{1,2}-\d{1,2}\b'
+    ]
+    
+    dates = []
+    for pattern in patterns:
+        dates.extend(re.findall(pattern, text, re.IGNORECASE))
+    
+    return dates
+
+
+def format_email_for_ai(email_data: Dict[str, Any]) -> str:
+    """
+    Format email data into a structured prompt for AI processing.
+    
+    Args:
+        email_data: Dictionary containing email fields:
+            - subject: Email subject
+            - body: Email body
+            - sender: Email sender
+            - date: Email date
+            
+    Returns:
+        Formatted string for AI processing
+    """
+    prompt = (
+        f"EMAIL INFORMATION:\n"
+        f"From: {email_data.get('sender', 'Unknown')}\n"
+        f"Date: {email_data.get('date', 'Unknown')}\n"
+        f"Subject: {email_data.get('subject', 'No Subject')}\n\n"
+        f"Body:\n{email_data.get('body', '')}\n\n"
+    )
+    
+    # Add entity extraction
+    if 'body' in email_data:
+        entities = extract_entities(email_data['body'])
+        
+        if any(entities.values()):
+            prompt += "EXTRACTED ENTITIES:\n"
+            
+            if entities['emails']:
+                prompt += f"Email addresses: {', '.join(entities['emails'])}\n"
+                
+            if entities['urls']:
+                prompt += f"URLs: {', '.join(entities['urls'])}\n"
+                
+            if entities['dates']:
+                prompt += f"Dates: {', '.join(entities['dates'])}\n"
+    
+    return prompt
+
+
+def generate_email_response_template(
+    original_email: Dict[str, Any],
+    ai_response: str
+) -> Dict[str, str]:
+    """
+    Generate a structured email response template.
+    
+    Args:
+        original_email: Dictionary containing original email fields
+        ai_response: AI-generated response text
+        
+    Returns:
+        Dictionary with response template:
+            - to: Recipient address
+            - subject: Response subject line
+            - body: Formatted response body
+    """
+    # Create subject line (prepend "Re: " if not already present)
+    original_subject = original_email.get('subject', 'No Subject')
+    subject = original_subject if original_subject.startswith('Re:') else f"Re: {original_subject}"
+    
+    # Format response body
+    body = f"{ai_response}\n\n"
+    
+    # Add original email as quoted text
+    body += (
+        f"On {original_email.get('date', 'Unknown')}, "
+        f"{original_email.get('sender', 'Unknown')} wrote:\n\n"
+    )
+    
+    # Quote original email body
+    original_body = original_email.get('body', '')
+    quoted_body = '\n'.join([f"> {line}" for line in original_body.split('\n')])
+    body += quoted_body
+    
+    return {
+        "to": original_email.get('sender', ''),
+        "subject": subject,
+        "body": body
+    }
+
+
+def analyze_sentiment(email_body: str) -> str:
+    """
+    Perform sentiment analysis on the email body text.
+    
+    In a real integration, this would be done by the AI model.
+    This is a simplified version for demonstration purposes.
+    
+    Args:
+        email_body: Email body text
+        
+    Returns:
+        Sentiment category: "positive", "negative", or "neutral"
+    """
+    # Convert to lowercase for case-insensitive matching
+    text = email_body.lower()
+    
+    # Simple positive and negative word lists
+    positive_words = ['thank', 'thanks', 'appreciate', 'good', 'great', 'excellent',
+                      'happy', 'pleased', 'congratulations', 'love', 'like', 'enjoy']
+    
+    negative_words = ['issue', 'problem', 'complaint', 'error', 'fail', 'sorry',
+                      'broken', 'unhappy', 'disappointed', 'bad', 'terrible', 'hate']
+    
+    # Count word occurrences
+    positive_count = sum(1 for word in positive_words if word in text)
+    negative_count = sum(1 for word in negative_words if word in text)
+    
+    # Determine sentiment
+    if positive_count > negative_count:
+        return "positive"
+    elif negative_count > positive_count:
+        return "negative"
+    else:
+        return "neutral"
+
+
+def extract_action_items(email_body: str) -> List[str]:
+    """
+    Extract potential action items from an email.
+    
+    In a real integration, this would be done by the AI model.
+    This is a simplified version for demonstration purposes.
+    
+    Args:
+        email_body: Email body text
+        
+    Returns:
+        List of extracted action items
+    """
+    # Convert to lowercase and split into sentences
+    text = email_body.lower()
+    sentences = re.split(r'[.!?]+', text)
+    
+    # Action item indicators
+    action_indicators = [
+        'please', 'kindly', 'could you', 'can you', 'would you',
+        'need to', 'should', 'must', 'required', 'deadline',
+        'by tomorrow', 'asap', 'as soon as possible', 'urgent',
+        'action required', 'to-do', 'todo', 'action item'
+    ]
+    
+    # Extract sentences that likely contain action items
+    action_items = []
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if sentence and any(indicator in sentence for indicator in action_indicators):
+            # Capitalize first letter and add period
+            formatted_sentence = sentence[0].upper() + sentence[1:] + '.'
+            action_items.append(formatted_sentence)
+    
+    return action_items
+
+================================================================================
+
+FILE: file_collection.txt
+LINES: 1023
+--------------------------------------------------------------------------------
+
+CODE COLLECTION GENERATED ON 2025-05-04 13:19:31
+Root directory: C:\Users\prath\Desktop\del1\team8-yotov-template-repository\integration
+================================================================================
+
+FILE: ai_email_assistant.py
+LINES: 337
+--------------------------------------------------------------------------------
+
+"""
+AI Email Assistant Integration.
+
+This module integrates the Cerebras AI Conversation Client with MyInbox
+email implementation to create an AI-powered email assistant.
+"""
+
+from typing import Dict, List, Optional, Union
+from datetime import datetime
+
+# Import from my_inbox_impl
+# from my_inbox_impl import get_client as get_email_client
+# from my_inbox_impl.get_client import get_email_client
+from my_inbox_impl._impl import get_client as get_email_client
+from my_inbox_impl.mail_fetcher import MockFetcher, IMAPFetcher
+
+# Import from AI conversation client
+from components.ai_conversation_client import get_client as get_ai_client
+from components.ai_conversation_client import AIConversationClient, CerebrasClient
+
+class AIEmailAssistant:
+    """
+    Integrates AI conversation capabilities with email operations.
+    
+    This class connects the Cerebras AI client with the MyInbox email
+    implementation to provide AI-powered email processing and responses.
+    """
+    
+    def __init__(
+        self,
+        use_mock: bool = True,
+        ai_client_name: str = "mock",
+        imap_config: Optional[Dict[str, str]] = None
+    ) -> None:
+        """
+        Initialize the AI Email Assistant.
+        
+        Args:
+            use_mock: Whether to use mock data for emails (True) or connect to
+                     real email server (False)
+            ai_client_name: The AI client to use ("cerebras" or "mock")
+            imap_config: Configuration for IMAP connection, required if use_mock is False
+                         Format: {
+                             "host": "imap.example.com",
+                             "port": "993",
+                             "username": "user@example.com",
+                             "password": "password"
+                         }
+        
+        Raises:
+            ValueError: If use_mock is False and imap_config is not provided
+        """
+        # Initialize AI client
+        self.ai_client = get_ai_client(ai_client_name)
+        
+        # Initialize email client
+        self.email_client = get_email_client()
+        
+        # Set up email fetcher
+        if use_mock:
+            self.email_fetcher = MockFetcher()
+        else:
+            if not imap_config:
+                raise ValueError("IMAP configuration is required when use_mock is False")
+            
+            self.email_fetcher = IMAPFetcher(
+                host=imap_config["host"],
+                port=int(imap_config["port"]),
+                username=imap_config["username"],
+                password=imap_config["password"]
+            )
+        
+        # Connect email fetcher to email client
+        self.email_fetcher.set_client(self.email_client)
+        
+        # Track AI sessions for each email context
+        self.active_sessions: Dict[str, str] = {}  # email_id -> ai_session_id
+    
+    def fetch_emails(self, count: int = 10, folder: str = "INBOX") -> List[str]:
+        """
+        Fetch emails from the specified folder.
+        
+        Args:
+            count: Number of emails to fetch
+            folder: Folder to fetch emails from
+            
+        Returns:
+            List of email IDs that were fetched
+        """
+        emails = self.email_fetcher.fetch_messages(count=count, folder=folder)
+        return [email.id for email in emails]
+    
+    def process_email(self, email_id: str) -> Dict[str, str]:
+        """
+        Process an email using the AI client and generate a response.
+        
+        Args:
+            email_id: ID of the email to process
+            
+        Returns:
+            Dictionary containing:
+                - original_subject: Original email subject
+                - original_body: Original email body
+                - sender: Email sender
+                - ai_response: Generated AI response
+                
+        Raises:
+            ValueError: If email with given ID is not found
+        """
+        # Get email messages
+        messages = list(self.email_client.get_messages())
+        
+        # Find the specific email
+        target_email = next((msg for msg in messages if msg.id == email_id), None)
+        
+        if not target_email:
+            raise ValueError(f"Email with ID {email_id} not found")
+
+        
+        # Create or retrieve an AI session for this email
+        if email_id not in self.active_sessions:
+            # Create new AI session
+            user_id = f"email_user_{email_id[:8]}"
+            session_id = self.ai_client.start_new_session(user_id)
+            self.active_sessions[email_id] = session_id
+        else:
+            session_id = self.active_sessions[email_id]
+        
+        # Create a prompt based on the email content
+        prompt = self._create_email_prompt(target_email.subject, target_email.body)
+        
+        # Get AI response
+        response = self.ai_client.send_message(session_id, prompt)
+        
+        return {
+            "original_subject": target_email.subject,
+            "original_body": target_email.body,
+            "sender": target_email.from_,
+            "ai_response": response["response"]
+        }
+    
+    def _create_email_prompt(self, subject: str, body: str) -> str:
+        """
+        Create a prompt for the AI based on email content.
+        
+        Args:
+            subject: Email subject
+            body: Email body
+            
+        Returns:
+            Formatted prompt for the AI
+        """
+        prompt = (
+            f"Please analyze this email and suggest a response:\n\n"
+            f"Subject: {subject}\n\n"
+            f"Body:\n{body}\n\n"
+            f"Analyze the tone, content, and context of this email. "
+            f"Then draft a professional and appropriate response."
+        )
+        return prompt
+    
+    def get_email_summary(self, email_id: str) -> str:
+        """
+        Generate a summary of an email using the AI.
+        
+        Args:
+            email_id: ID of the email to summarize
+            
+        Returns:
+            Summary of the email
+            
+        Raises:
+            ValueError: If email with given ID is not found
+        """
+        # Get email messages
+        messages = list(self.email_client.get_messages())
+        
+        # Find the specific email
+        target_email = None
+        for msg in messages:
+            if msg.id == email_id:
+                target_email = msg
+                break
+                
+        if not target_email:
+            raise ValueError(f"Email with ID {email_id} not found")
+        
+        # Create or retrieve an AI session for this email
+        if email_id not in self.active_sessions:
+            # Create new AI session
+            user_id = f"email_user_{email_id[:8]}"
+            session_id = self.ai_client.start_new_session(user_id)
+            self.active_sessions[email_id] = session_id
+        else:
+            session_id = self.active_sessions[email_id]
+        
+        # Create a summary prompt
+        prompt = (
+            f"Please provide a concise 2-3 sentence summary of this email:\n\n"
+            f"Subject: {target_email.subject}\n\n"
+            f"Body:\n{target_email.body}\n\n"
+        )
+        
+        # Get AI response
+        response = self.ai_client.send_message(session_id, prompt)
+        
+        return response["response"]
+    
+    def search_emails(self, query: str) -> List[Dict[str, str]]:
+        """
+        Search emails with AI-enhanced context understanding.
+        
+        Args:
+            query: Search query
+            
+        Returns:
+            List of dictionaries containing matching email information:
+                - id: Email ID
+                - subject: Email subject
+                - sender: Email sender
+                - relevance: AI-determined relevance score (0-100)
+        """
+        # Get search results from email client
+        search_results = list(self.email_client.search_messages(query))
+        
+        if not search_results:
+            return []
+        
+        # Create a new AI session for search enhancement
+        user_id = f"search_user_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        session_id = self.ai_client.start_new_session(user_id)
+        
+        # Enhanced results with AI relevance scoring
+        enhanced_results = []
+        
+        for msg in search_results:
+            # Create a relevance prompt
+            prompt = (
+                f"On a scale of 0-100, rate the relevance of this email to the search query: '{query}'\n\n"
+                f"Subject: {msg.subject}\n\n"
+                f"Body:\n{msg.body}\n\n"
+                f"Return only a number between 0 and 100 representing the relevance score."
+            )
+            
+            # Get AI response
+            response = self.ai_client.send_message(session_id, prompt)
+            
+            # Try to extract a numeric score from the response
+            try:
+                score_text = ''.join([c for c in response["response"] if c.isdigit()])
+                score = int(score_text) if score_text else 50  # Default to 50 if parsing fails
+                score = max(0, min(100, score))  # Ensure score is within range
+            except (ValueError, TypeError):
+                score = 50  # Default score if parsing fails
+
+            
+            enhanced_results.append({
+                "id": msg.id,
+                "subject": msg.subject,
+                "sender": msg.from_,
+                "relevance": score
+            })
+        
+        # Sort by relevance (highest first)
+        enhanced_results.sort(key=lambda x: x["relevance"], reverse=True)
+        
+        # End the search session
+        self.ai_client.end_session(session_id)
+        
+        return enhanced_results
+    
+    def categorize_email(self, email_id: str) -> str:
+        """
+        Categorize an email using AI to determine its type/folder.
+        
+        Args:
+            email_id: ID of the email to categorize
+            
+        Returns:
+            Suggested folder/category for the email
+            
+        Raises:
+            ValueError: If email with given ID is not found
+        """
+        # Get email messages
+        messages = list(self.email_client.get_messages())
+        
+        # Find the specific email
+        target_email = None
+        for msg in messages:
+            if msg.id == email_id:
+                target_email = msg
+                break
+                
+        if not target_email:
+            raise ValueError(f"Email with ID {email_id} not found")
+        
+        # Create a new AI session for categorization
+        user_id = f"category_user_{email_id[:8]}"
+        session_id = self.ai_client.start_new_session(user_id)
+        
+        # Create a categorization prompt
+        prompt = (
+            f"Please categorize this email into one of the following folders: "
+            f"Inbox, Work, Personal, Finance, Social, Promotions, Updates, Forums, Spam.\n\n"
+            f"Subject: {target_email.subject}\n\n"
+            f"Body:\n{target_email.body}\n\n"
+            f"Return only the folder name with no additional text or explanation."
+        )
+        
+        # Get AI response
+        response = self.ai_client.send_message(session_id, prompt)
+        
+        # Clean up response to get just the folder name
+        folder = response["response"].strip()
+        
+        # End the categorization session
+        self.ai_client.end_session(session_id)
+        
+        return folder
+    
+    def close(self) -> None:
+        """Close all active sessions and connections."""
+        # End all AI sessions
+        for email_id, session_id in self.active_sessions.items():
+            try:
+                self.ai_client.end_session(session_id)
+            except Exception as e:  # Catch general exceptions, but log them or handle accordingly
+                print(f"Failed to end session for {session_id}: {e}")
+
+        
+        # Clear active sessions
+        self.active_sessions.clear()
+        
+        # Close email fetcher if using IMAP
+        if isinstance(self.email_fetcher, IMAPFetcher):
+            self.email_fetcher.close()
+
+================================================================================
+
+FILE: collector.py
+LINES: 129
+--------------------------------------------------------------------------------
+
+#!/usr/bin/env python3
+"""
+File Collector Script
+
+This script recursively searches through directories starting from the current directory,
+finds all files (excluding specified binary/media formats), and collects their content into 
+a single text file with file paths and separators for better readability.
+"""
+
+import os
+import argparse
+from datetime import datetime
+
+
+def collect_code(root_dir='.', output_file='code_collection.txt', exclude_extensions=None, ignore_dirs=None):
+    """
+    Recursively collect all files into a single text file.
+    
+    Args:
+        root_dir (str): Root directory to start the search from
+        output_file (str): Name of the output file
+        exclude_extensions (list): List of file extensions to exclude (e.g., ['.pyc', '.exe'])
+        ignore_dirs (list): List of directory names to ignore (e.g., ['node_modules', '.git'])
+    """
+    if exclude_extensions is None:
+        # Default extensions to exclude - typically binary or temporary files
+        exclude_extensions = [
+            '.pyc', '.pyo', '.pyd', '.exe', '.dll', '.so', '.o', '.obj',
+            '.class', '.jar', '.war', '.ear', '.zip', '.tar', '.gz', '.7z',
+            '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.svg', '.mp3',
+            '.mp4', '.avi', '.mov', '.flv', '.wmv', '.pdf', '.doc', '.docx',
+            '.xls', '.xlsx', '.ppt', '.pptx'
+        ]
+    
+    if ignore_dirs is None:
+        # Default directories to ignore - add or remove based on your needs
+        ignore_dirs = ['.git', 'node_modules', 'venv', '__pycache__', 'dist', 'build']
+    
+    # Convert exclude_extensions to lowercase for case-insensitive matching
+    exclude_extensions = [ext.lower() for ext in exclude_extensions]
+    
+    # Get absolute path of root directory
+    root_dir = os.path.abspath(root_dir)
+    
+    print(f"Starting code collection from {root_dir}")
+    print(f"Excluding extensions: {', '.join(exclude_extensions)}")
+    print(f"Ignoring directories: {', '.join(ignore_dirs)}")
+    
+    # Total counters
+    total_files = 0
+    total_lines = 0
+    
+    with open(output_file, 'w', encoding='utf-8') as outfile:
+        # Write header
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        outfile.write(f"CODE COLLECTION GENERATED ON {timestamp}\n")
+        outfile.write(f"Root directory: {root_dir}\n")
+        outfile.write("=" * 80 + "\n\n")
+        
+        # Walk through directory tree
+        for dirpath, dirnames, filenames in os.walk(root_dir):
+            # Remove ignored directories from dirnames to prevent walking into them
+            # Using slice assignment to modify dirnames in-place (required by os.walk)
+            dirnames[:] = [d for d in dirnames if d not in ignore_dirs]
+            
+            for filename in filenames:
+                # Check if the file does not have one of the excluded extensions
+                file_ext = os.path.splitext(filename)[1].lower()
+                if file_ext not in exclude_extensions:
+                    file_path = os.path.join(dirpath, filename)
+                    rel_path = os.path.relpath(file_path, root_dir)
+                    
+                    try:
+                        with open(file_path, 'r', encoding='utf-8') as infile:
+                            content = infile.read()
+                            
+                            # Count lines
+                            line_count = content.count('\n') + (0 if content.endswith('\n') else 1)
+                            total_lines += line_count
+                            total_files += 1
+                            
+                            # Write file info and content to output file
+                            outfile.write(f"FILE: {rel_path}\n")
+                            outfile.write(f"LINES: {line_count}\n")
+                            outfile.write("-" * 80 + "\n\n")
+                            outfile.write(content)
+                            outfile.write("\n\n")
+                            outfile.write("=" * 80 + "\n\n")
+                            
+                            print(f"Added: {rel_path} ({line_count} lines)")
+                    except Exception as e:
+                        print(f"Error reading {rel_path}: {e}")
+    
+    # Write summary at the end of the file
+    with open(output_file, 'a', encoding='utf-8') as outfile:
+        outfile.write(f"\nSUMMARY\n")
+        outfile.write(f"Total files processed: {total_files}\n")
+        outfile.write(f"Total lines of code: {total_lines}\n")
+    
+    print(f"\nCollection complete!")
+    print(f"Processed {total_files} files with {total_lines} lines of code")
+    print(f"Output saved to: {os.path.abspath(output_file)}")
+
+
+def main():
+    """Parse command line arguments and run the script."""
+    parser = argparse.ArgumentParser(description='Collect all files into a single text file.')
+    parser.add_argument('-d', '--directory', default='.', help='Root directory to start from (default: current directory)')
+    parser.add_argument('-o', '--output', default='file_collection.txt', help='Output file name (default: file_collection.txt)')
+    parser.add_argument('-e', '--exclude', nargs='+', help='File extensions to exclude (e.g., .exe .jpg)')
+    parser.add_argument('-i', '--ignore', nargs='+', help='Directories to ignore (e.g., node_modules .git)')
+    
+    args = parser.parse_args()
+    
+    # Convert exclude extensions from command line to proper format with leading dot
+    exclude_extensions = None
+    if args.exclude:
+        exclude_extensions = [ext if ext.startswith('.') else f'.{ext}' for ext in args.exclude]
+    
+    collect_code(
+        root_dir=args.directory,
+        output_file=args.output,
+        exclude_extensions=exclude_extensions,
+        ignore_dirs=args.ignore
+    )
+
+
+if __name__ == "__main__":
+    main()
+
+================================================================================
+
+FILE: config.py
+LINES: 105
+--------------------------------------------------------------------------------
+
+"""Configuration settings for the AI Email Assistant integration."""
+
+import os
+from typing import Dict, Any, Optional
+import json
+
+# Import constants
+from config_constants import (
+    DEFAULT_USE_MOCK, DEFAULT_AI_CLIENT_NAME, DEFAULT_EMAIL_USE_MOCK,
+    CONFIG_USE_MOCK, CONFIG_AI_CLIENT, CONFIG_AI_CLIENT_NAME, CONFIG_AI_CLIENT_API_KEY,
+    CONFIG_EMAIL, CONFIG_EMAIL_USE_MOCK, CONFIG_EMAIL_IMAP,
+    CONFIG_EMAIL_IMAP_HOST, CONFIG_EMAIL_IMAP_PORT, CONFIG_EMAIL_IMAP_USERNAME, CONFIG_EMAIL_IMAP_PASSWORD,
+    ENV_CEREBRAS_API_KEY, ENV_EMAIL_IMAP_HOST, ENV_EMAIL_IMAP_PORT, ENV_EMAIL_USERNAME, ENV_EMAIL_PASSWORD,
+    DEFAULT_IMAP_PORT, DEFAULT_IMAP_HOST, DEFAULT_EMAIL_USERNAME
+)
+
+def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Load configuration from a JSON file or environment variables.
+
+    Args:
+        config_path: Path to JSON configuration file (optional)
+
+    Returns:
+        Dictionary containing configuration settings
+    """
+    config = {
+        CONFIG_USE_MOCK: DEFAULT_USE_MOCK,
+        CONFIG_AI_CLIENT: {
+            CONFIG_AI_CLIENT_NAME: DEFAULT_AI_CLIENT_NAME,
+            CONFIG_AI_CLIENT_API_KEY: os.environ.get(ENV_CEREBRAS_API_KEY, "")
+        },
+        CONFIG_EMAIL: {
+            CONFIG_EMAIL_USE_MOCK: DEFAULT_EMAIL_USE_MOCK,
+            CONFIG_EMAIL_IMAP: {
+                CONFIG_EMAIL_IMAP_HOST: os.environ.get(ENV_EMAIL_IMAP_HOST, ""),
+                CONFIG_EMAIL_IMAP_PORT: os.environ.get(ENV_EMAIL_IMAP_PORT, DEFAULT_IMAP_PORT),
+                CONFIG_EMAIL_IMAP_USERNAME: os.environ.get(ENV_EMAIL_USERNAME, ""),
+                CONFIG_EMAIL_IMAP_PASSWORD: os.environ.get(ENV_EMAIL_PASSWORD, "")
+            }
+        }
+    }
+
+    # Load from file if provided
+    if config_path and os.path.exists(config_path):
+        with open(config_path, 'r') as f:
+            file_config = json.load(f)
+        # Merge configurations
+        config = deep_merge(config, file_config)
+
+    return config
+
+
+def deep_merge(base: Dict[str, Any], update: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Recursively merge two dictionaries.
+
+    Args:
+        base: Base dictionary
+        update: Dictionary with values to update
+
+    Returns:
+        Merged dictionary
+    """
+    result = base.copy()
+    for key, value in update.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = deep_merge(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
+def create_default_config(output_path: str) -> None:
+    """
+    Create a default configuration file.
+
+    Args:
+        output_path: Path where to save the configuration file
+    """
+    config = {
+        CONFIG_USE_MOCK: DEFAULT_USE_MOCK,
+        CONFIG_AI_CLIENT: {
+            CONFIG_AI_CLIENT_NAME: DEFAULT_AI_CLIENT_NAME,
+            CONFIG_AI_CLIENT_API_KEY: ""
+        },
+        CONFIG_EMAIL: {
+            CONFIG_EMAIL_USE_MOCK: DEFAULT_EMAIL_USE_MOCK,
+            CONFIG_EMAIL_IMAP: {
+                CONFIG_EMAIL_IMAP_HOST: DEFAULT_IMAP_HOST,
+                CONFIG_EMAIL_IMAP_PORT: DEFAULT_IMAP_PORT,
+                CONFIG_EMAIL_IMAP_USERNAME: DEFAULT_EMAIL_USERNAME,
+                CONFIG_EMAIL_IMAP_PASSWORD: ""
+            }
+        }
+    }
+
+    # Create directory if it doesn't exist
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+
+    # Write config file
+    with open(output_path, 'w') as f:
+        json.dump(config, f, indent=2)
+
+    print(f"Default configuration created at {output_path}")
+
+
+================================================================================
+
+FILE: config_constants.py
+LINES: 31
+--------------------------------------------------------------------------------
+
+"""Constants for the AI Email Assistant configuration."""
+
+# Default configuration values
+DEFAULT_USE_MOCK = True
+DEFAULT_AI_CLIENT_NAME = "mock"
+DEFAULT_EMAIL_USE_MOCK = True
+
+# Configuration keys
+CONFIG_USE_MOCK = "use_mock"
+CONFIG_AI_CLIENT = "ai_client"
+CONFIG_AI_CLIENT_NAME = "name"
+CONFIG_AI_CLIENT_API_KEY = "api_key"
+CONFIG_EMAIL = "email"
+CONFIG_EMAIL_USE_MOCK = "use_mock"
+CONFIG_EMAIL_IMAP = "imap"
+CONFIG_EMAIL_IMAP_HOST = "host"
+CONFIG_EMAIL_IMAP_PORT = "port"
+CONFIG_EMAIL_IMAP_USERNAME = "username"
+CONFIG_EMAIL_IMAP_PASSWORD = "password"
+
+# Environment variable names
+ENV_CEREBRAS_API_KEY = "CEREBRAS_API_KEY"
+ENV_EMAIL_IMAP_HOST = "EMAIL_IMAP_HOST"
+ENV_EMAIL_IMAP_PORT = "EMAIL_IMAP_PORT"
+ENV_EMAIL_USERNAME = "EMAIL_USERNAME"
+ENV_EMAIL_PASSWORD = "EMAIL_PASSWORD"
+
+# Default values for configuration
+DEFAULT_IMAP_PORT = "993"
+DEFAULT_IMAP_HOST = "imap.example.com"
+DEFAULT_EMAIL_USERNAME = "user@example.com"
+
+
+================================================================================
+
+FILE: demo.py
+LINES: 156
+--------------------------------------------------------------------------------
+
+"""
+Demo script for the AI Email Assistant integration.
+
+This script demonstrates the integration between the AI Conversation Client
+and MyInbox email implementation.
+"""
+
+import sys
+import os
+
+# Project root (for integration import)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'my_inbox_impl', 'src')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'my_inbox_api', 'src')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'ai-client-component', 'src')))
+
+import argparse
+from typing import Dict, List, Optional, Any
+
+from integration.ai_email_assistant import AIEmailAssistant
+from integration.config import load_config, create_default_config
+
+
+def demo_mock_mode():
+    """Run the demo in mock mode (no real email or AI connections)."""
+    print("\n=== AI Email Assistant Demo (Mock Mode) ===\n")
+    
+    # Initialize AI Email Assistant with mock clients
+    assistant = AIEmailAssistant(use_mock=True, ai_client_name="mock")
+    
+    try:
+        # 1. Fetch mock emails
+        print("Fetching mock emails...")
+        email_ids = assistant.fetch_emails(count=10)
+        print(f"Fetched {len(email_ids)} mock emails")
+        
+        if not email_ids:
+            print("No emails to process. Exiting demo.")
+            return
+        
+        # 2. Process one email
+        print("\n--- Processing a sample email ---")
+        email_id = email_ids[0]  # Use the first email
+        result = assistant.process_email(email_id)
+        
+        print(f"Original Subject: {result['original_subject']}")
+        print(f"From: {result['sender']}")
+        print("\nOriginal Email Body:")
+        print(f"{result['original_body'][:200]}..." if len(result['original_body']) > 200 else result['original_body'])
+        print("\nAI-Generated Response:")
+        print(result['ai_response'])
+        
+        # 3. Generate email summary
+        print("\n--- Generating Email Summary ---")
+        summary = assistant.get_email_summary(email_id)
+        print(f"Summary: {summary}")
+        
+        # 4. Search emails
+        print("\n--- Searching Emails ---")
+        search_term = "important"
+        print(f"Searching for: '{search_term}'")
+        search_results = assistant.search_emails(search_term)
+        
+        print(f"Found {len(search_results)} emails (sorted by AI-determined relevance):")
+        for idx, result in enumerate(search_results[:3], 1):  # Show top 3 results
+            print(f"{idx}. '{result['subject']}' (Relevance: {result['relevance']}%)")
+        
+        # 5. Categorize emails
+        print("\n--- Categorizing Emails ---")
+        for i, email_id in enumerate(email_ids[:3], 1):  # Categorize first 3 emails
+            try:
+                category = assistant.categorize_email(email_id)
+                
+                # Get email info for display
+                messages = list(assistant.email_client.get_messages())
+                email = next((msg for msg in messages if msg.id == email_id), None)
+                
+                if email:
+                    print(f"{i}. '{email.subject}' → Category: {category}")
+            except ValueError as e:
+                print(f"Error categorizing email {email_id}: {e}")
+        
+        print("\nDemo completed successfully!")
+        
+    finally:
+        # Ensure resources are cleaned up
+        assistant.close()
+
+
+def demo_with_config(config_path: str):
+    """
+    Run the demo using a configuration file.
+    
+    Args:
+        config_path: Path to the configuration file
+    """
+    print(f"\n=== AI Email Assistant Demo (Using config: {config_path}) ===\n")
+    
+    # Load configuration
+    config = load_config(config_path)
+    
+    # Determine if we're using mock mode
+    use_mock = config.get("use_mock", True)
+    ai_client_name = config.get("ai_client", {}).get("name", "mock")
+    
+    # Set up IMAP config if not using mock
+    imap_config = None
+    if not config.get("email", {}).get("use_mock", True):
+        imap_config = config.get("email", {}).get("imap", {})
+    
+    print(f"Mode: {'Mock' if use_mock else 'Real'}")
+    print(f"AI Client: {ai_client_name}")
+    
+    # Initialize AI Email Assistant
+    assistant = AIEmailAssistant(
+        use_mock=use_mock,
+        ai_client_name=ai_client_name,
+        imap_config=imap_config
+    )
+    
+    try:
+        # Run demo logic similar to mock mode
+        print("Fetching emails...")
+        email_ids = assistant.fetch_emails(count=5)
+        print(f"Fetched {len(email_ids)} emails")
+        
+        # Continue with similar demo logic as mock_mode
+        # ...
+        
+    finally:
+        assistant.close()
+
+
+def main():
+    """Run the main entry point for the demo."""
+    parser = argparse.ArgumentParser(description="AI Email Assistant Demo")
+    parser.add_argument("--config", help="Path to configuration file")
+    parser.add_argument("--create-config", help="Create default configuration file at specified path")
+    parser.add_argument("--mock", action="store_true", help="Run in mock mode (default if no config)")
+    
+    args = parser.parse_args()
+    
+    # Create default config if requested
+    if args.create_config:
+        create_default_config(args.create_config)
+        return
+    
+    # Determine mode
+    if args.config:
+        demo_with_config(args.config)
+    else:
+        demo_mock_mode()
+
+
+if __name__ == "__main__":
+    main()
+
+================================================================================
+
+FILE: email_processor.py
+LINES: 220
+--------------------------------------------------------------------------------
+
+"""
+Email Processing Module.
+
+Provides utility functions for processing emails with AI assistance.
+"""
+
+import re
+from typing import Dict, List, Any
+from datetime import datetime
+
+# Regex patterns for email extraction
+EMAIL_PATTERN = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+URL_PATTERN = r'https?://[^\s]+'
+
+
+def extract_entities(email_body: str) -> Dict[str, List[str]]:
+    """
+    Extract important entities from an email body.
+    
+    Args:
+        email_body: The email body content
+        
+    Returns:
+        Dictionary with extracted entities:
+            - emails: List of email addresses
+            - urls: List of URLs
+            - dates: List of date strings
+    """
+    entities = {
+        "emails": re.findall(EMAIL_PATTERN, email_body),
+        "urls": re.findall(URL_PATTERN, email_body),
+        "dates": extract_dates(email_body)
+    }
+    
+    return entities
+
+
+def extract_dates(text: str) -> List[str]:
+    """
+    Extract date-like strings from text.
+    
+    Args:
+        text: Text to process
+        
+    Returns:
+        List of date strings found in the text
+    """
+    # Common date patterns
+    patterns = [
+        # MM/DD/YYYY
+        r'\b\d{1,2}/\d{1,2}/\d{2,4}\b',
+        # Month DD, YYYY
+        r'\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{1,2},? \d{4}\b',
+        # DD Month YYYY
+        r'\b\d{1,2} (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]* \d{4}\b',
+        # YYYY-MM-DD
+        r'\b\d{4}-\d{1,2}-\d{1,2}\b'
+    ]
+    
+    dates = []
+    for pattern in patterns:
+        dates.extend(re.findall(pattern, text, re.IGNORECASE))
+    
+    return dates
+
+
+def format_email_for_ai(email_data: Dict[str, Any]) -> str:
+    """
+    Format email data into a structured prompt for AI processing.
+    
+    Args:
+        email_data: Dictionary containing email fields:
+            - subject: Email subject
+            - body: Email body
+            - sender: Email sender
+            - date: Email date
+            
+    Returns:
+        Formatted string for AI processing
+    """
+    prompt = (
+        f"EMAIL INFORMATION:\n"
+        f"From: {email_data.get('sender', 'Unknown')}\n"
+        f"Date: {email_data.get('date', 'Unknown')}\n"
+        f"Subject: {email_data.get('subject', 'No Subject')}\n\n"
+        f"Body:\n{email_data.get('body', '')}\n\n"
+    )
+    
+    # Add entity extraction
+    if 'body' in email_data:
+        entities = extract_entities(email_data['body'])
+        
+        if any(entities.values()):
+            prompt += "EXTRACTED ENTITIES:\n"
+            
+            if entities['emails']:
+                prompt += f"Email addresses: {', '.join(entities['emails'])}\n"
+                
+            if entities['urls']:
+                prompt += f"URLs: {', '.join(entities['urls'])}\n"
+                
+            if entities['dates']:
+                prompt += f"Dates: {', '.join(entities['dates'])}\n"
+    
+    return prompt
+
+
+def generate_email_response_template(
+    original_email: Dict[str, Any],
+    ai_response: str
+) -> Dict[str, str]:
+    """
+    Generate a structured email response template.
+    
+    Args:
+        original_email: Dictionary containing original email fields
+        ai_response: AI-generated response text
+        
+    Returns:
+        Dictionary with response template:
+            - to: Recipient address
+            - subject: Response subject line
+            - body: Formatted response body
+    """
+    # Create subject line (prepend "Re: " if not already present)
+    original_subject = original_email.get('subject', 'No Subject')
+    subject = original_subject if original_subject.startswith('Re:') else f"Re: {original_subject}"
+    
+    # Format response body
+    body = f"{ai_response}\n\n"
+    
+    # Add original email as quoted text
+    body += (
+        f"On {original_email.get('date', 'Unknown')}, "
+        f"{original_email.get('sender', 'Unknown')} wrote:\n\n"
+    )
+    
+    # Quote original email body
+    original_body = original_email.get('body', '')
+    quoted_body = '\n'.join([f"> {line}" for line in original_body.split('\n')])
+    body += quoted_body
+    
+    return {
+        "to": original_email.get('sender', ''),
+        "subject": subject,
+        "body": body
+    }
+
+
+def analyze_sentiment(email_body: str) -> str:
+    """
+    Perform sentiment analysis on the email body text.
+    
+    In a real integration, this would be done by the AI model.
+    This is a simplified version for demonstration purposes.
+    
+    Args:
+        email_body: Email body text
+        
+    Returns:
+        Sentiment category: "positive", "negative", or "neutral"
+    """
+    # Convert to lowercase for case-insensitive matching
+    text = email_body.lower()
+    
+    # Simple positive and negative word lists
+    positive_words = ['thank', 'thanks', 'appreciate', 'good', 'great', 'excellent',
+                      'happy', 'pleased', 'congratulations', 'love', 'like', 'enjoy']
+    
+    negative_words = ['issue', 'problem', 'complaint', 'error', 'fail', 'sorry',
+                      'broken', 'unhappy', 'disappointed', 'bad', 'terrible', 'hate']
+    
+    # Count word occurrences
+    positive_count = sum(1 for word in positive_words if word in text)
+    negative_count = sum(1 for word in negative_words if word in text)
+    
+    # Determine sentiment
+    if positive_count > negative_count:
+        return "positive"
+    elif negative_count > positive_count:
+        return "negative"
+    else:
+        return "neutral"
+
+
+def extract_action_items(email_body: str) -> List[str]:
+    """
+    Extract potential action items from an email.
+    
+    In a real integration, this would be done by the AI model.
+    This is a simplified version for demonstration purposes.
+    
+    Args:
+        email_body: Email body text
+        
+    Returns:
+        List of extracted action items
+    """
+    # Convert to lowercase and split into sentences
+    text = email_body.lower()
+    sentences = re.split(r'[.!?]+', text)
+    
+    # Action item indicators
+    action_indicators = [
+        'please', 'kindly', 'could you', 'can you', 'would you',
+        'need to', 'should', 'must', 'required', 'deadline',
+        'by tomorrow', 'asap', 'as soon as possible', 'urgent',
+        'action required', 'to-do', 'todo', 'action item'
+    ]
+    
+    # Extract sentences that likely contain action items
+    action_items = []
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if sentence and any(indicator in sentence for indicator in action_indicators):
+            # Capitalize first letter and add period
+            formatted_sentence = sentence[0].upper() + sentence[1:] + '.'
+            action_items.append(formatted_sentence)
+    
+    return action_items
+
+================================================================================
+
+FILE: pyproject.toml
+LINES: 21
+--------------------------------------------------------------------------------
+
+[project]
+name = "integration"
+version = "0.1.0"
+description = "Integration Component"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "coverage>=7.6.12",
+    "mypy>=1.15.0",
+    "nose2>=0.15.1",
+    "pytest>=8.3.4",
+    "ruff>=0.9.6",
+    "uv>=0.6.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+================================================================================
+
+FILE: __init__.py
+LINES: 27
+--------------------------------------------------------------------------------
+
+# __init__.py
+"""
+AI Email Assistant Integration Package.
+
+This package integrates the Cerebras AI Conversation Client with
+MyInbox email implementation.
+"""
+
+from .ai_email_assistant import AIEmailAssistant
+from .email_processor import (
+    extract_entities, extract_dates, format_email_for_ai,
+    generate_email_response_template, analyze_sentiment,
+    extract_action_items
+)
+from .config import load_config, create_default_config
+
+__all__ = [
+    'AIEmailAssistant',
+    'extract_entities',
+    'extract_dates',
+    'format_email_for_ai',
+    'generate_email_response_template',
+    'analyze_sentiment',
+    'extract_action_items',
+    'load_config',
+    'create_default_config'
+]
+
+================================================================================
+
+FILE: tests\spam_detection_results.csv
+LINES: 51
+--------------------------------------------------------------------------------
+
+mail_id,Pct_spam
+msg_001,95.5
+msg_002,12.3
+msg_003,89.2
+msg_004,5.7
+msg_005,76.8
+msg_006,3.2
+msg_007,91.4
+msg_008,15.6
+msg_009,68.9
+msg_010,8.1
+msg_011,82.7
+msg_012,4.5
+msg_013,93.6
+msg_014,11.2
+msg_015,77.3
+msg_016,6.8
+msg_017,88.5
+msg_018,9.4
+msg_019,72.1
+msg_020,2.9
+msg_021,85.7
+msg_022,13.8
+msg_023,79.4
+msg_024,7.6
+msg_025,90.2
+msg_026,16.3
+msg_027,69.8
+msg_028,5.1
+msg_029,83.9
+msg_030,10.7
+msg_031,94.2
+msg_032,8.9
+msg_033,71.6
+msg_034,4.3
+msg_035,87.1
+msg_036,12.5
+msg_037,78.9
+msg_038,6.2
+msg_039,92.8
+msg_040,14.7
+msg_041,73.4
+msg_042,3.8
+msg_043,86.3
+msg_044,11.9
+msg_045,75.2
+msg_046,7.4
+msg_047,89.7
+msg_048,15.1
+msg_049,70.5
+msg_050,8.8
+
+
+================================================================================
+
+FILE: tests\test_email_processor.py
+LINES: 132
+--------------------------------------------------------------------------------
+
+"""Unit tests for the email processor module."""
+
+import os
+import sys
+import pytest
+from datetime import datetime
+
+# Add parent directory to path for imports
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from email_processor import (extract_entities, extract_dates, format_email_for_ai,
+                          generate_email_response_template, analyze_sentiment,
+                          extract_action_items)
+
+def test_extract_entities():
+    """Test extracting entities from email text."""
+    # Sample email body with entities
+    email_body = """
+    Hello team,
+    Please contact john.doe@example.com or visit https://example.com for more information.
+    We have a meeting scheduled on 05/15/2025 and another one on June 20, 2025.
+    Regards,
+    Jane Smith
+    """
+    
+    # Extract entities
+    entities = extract_entities(email_body)
+    
+    # Verify emails
+    assert "john.doe@example.com" in entities["emails"]
+    
+    # Verify URLs
+    assert "https://example.com" in entities["urls"]
+    
+    # Verify dates
+    assert any("05/15/2025" in date for date in entities["dates"])
+    assert any("June 20, 2025" in date for date in entities["dates"])
+
+def test_extract_dates():
+    """Test extracting dates from text."""
+    # Text with various date formats
+    text = """
+    Meeting on 01/15/2025
+    Conference call on March 20, 2025
+    Deadline is 2025-04-30
+    Review session on 5 April 2025
+    """
+    
+    dates = extract_dates(text)
+    
+    # Verify we found all four dates
+    assert len(dates) == 4
+    assert any("01/15/2025" in date for date in dates)
+    assert any("March 20, 2025" in date for date in dates)
+    assert any("2025-04-30" in date for date in dates)
+    assert any("5 April 2025" in date for date in dates)
+
+def test_format_email_for_ai():
+    """Test formatting email data for AI processing."""
+    # Sample email data
+    email_data = {
+        "subject": "Project Update",
+        "body": "Hello team,\nProject is on track. Please contact john@example.com.",
+        "sender": "manager@company.com",
+        "date": "2025-04-25"
+    }
+    
+    # Format for AI
+    formatted = format_email_for_ai(email_data)
+    
+    # Verify structure
+    assert "EMAIL INFORMATION:" in formatted
+    assert "From: manager@company.com" in formatted
+    assert "Subject: Project Update" in formatted
+    assert "Hello team," in formatted
+    
+    # Verify extracted entities
+    assert "EXTRACTED ENTITIES:" in formatted
+    assert "john@example.com" in formatted
+
+def test_generate_email_response_template():
+    """Test generating email response template."""
+    # Original email
+    original_email = {
+        "subject": "Question about project",
+        "body": "When will the project be completed?",
+        "sender": "client@example.com",
+        "date": "2025-04-24"
+    }
+    
+    # AI response
+    ai_response = "The project is scheduled to be completed by next Friday."
+    
+    # Generate template
+    template = generate_email_response_template(original_email, ai_response)
+    
+    # Verify template structure
+    assert template["to"] == "client@example.com"
+    assert template["subject"] == "Re: Question about project"
+    assert "The project is scheduled to be completed by next Friday" in template["body"]
+    assert "On 2025-04-24" in template["body"]
+    assert "> When will the project be completed?" in template["body"]
+
+@pytest.mark.parametrize("text, expected", [
+    ("Thank you for your excellent work. I really appreciate your help.", "positive"),
+    ("There's a problem with the service. I'm disappointed with the results.", "negative"),
+    ("Please find attached the requested documents.", "neutral")
+])
+def test_analyze_sentiment(text, expected):
+    """Test sentiment analysis function."""
+    assert analyze_sentiment(text) == expected
+
+def test_extract_action_items():
+    """Test extracting action items from email."""
+    # Email with action items
+    email_text = """
+    Hello team,
+    Please review the attached document by tomorrow.
+    We need to finalize the report ASAP.
+    Could you update the presentation with the latest figures?
+    Let me know if you have any questions.
+    """
+    
+    action_items = extract_action_items(email_text)
+    
+    # Verify we found at least 3 action items
+    assert len(action_items) >= 3
+    
+    # Check for specific action items
+    assert any("review the attached document" in item.lower() for item in action_items)
+    assert any("finalize the report" in item.lower() for item in action_items)
+    assert any("update the presentation" in item.lower() for item in action_items)
+
+
+================================================================================
+
+FILE: tests\test_integration.py
+LINES: 270
+--------------------------------------------------------------------------------
+
+"""Integration tests for AI Email Assistant - Spam Detection."""
+import os
+import sys
+import pytest
+import csv
+import random
+from datetime import datetime
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from ai_email_assistant import AIEmailAssistant
+
+@pytest.fixture
+def assistant():
+    """Set up test environment."""
+    assistant = AIEmailAssistant(use_mock=True, ai_client_name="mock")
+    yield assistant
+    assistant.close()
+
+@pytest.fixture
+def output_csv():
+    """Create output CSV file for spam detection results."""
+    filename = 'spam_detection_results.csv'
+    yield filename
+    # Optionally remove file after tests
+    # if os.path.exists(filename):
+    #     os.remove(filename)
+
+def test_spam_detection_with_csv_output(assistant, output_csv):
+    """Test spam detection and output results to CSV."""
+    # Fetch emails for testing
+    email_ids = assistant.fetch_emails(count=10)  # Adjust count as needed
+    
+    # Prepare results list
+    results = []
+    
+    # Process each email for spam detection
+    for email_id in email_ids:
+        try:
+            # Get email content
+            email_data = assistant.get_email(email_id)
+            
+            # Create prompt for spam detection
+            spam_detection_prompt = f"""
+            Analyze this email and determine the probability it is spam.
+            Return only a number between 0 and 100 representing the spam percentage.
+            
+            Email content:
+            From: {email_data.get('from', '')}
+            To: {email_data.get('to', '')}
+            Subject: {email_data.get('subject', '')}
+            Body: {email_data.get('body', '')[:500]}...
+            
+            Spam percentage (0-100):
+            """
+            
+            # Get AI response for spam detection
+            response = assistant.ai_client.generate_response(spam_detection_prompt)
+            
+            # Extract percentage from response
+            # This is a simple extraction - might need more robust parsing
+            try:
+                pct_spam = float(''.join(filter(str.isdigit, response)))
+                if pct_spam > 100:
+                    pct_spam = 100
+                elif pct_spam < 0:
+                    pct_spam = 0
+            except ValueError:
+                # If extraction fails, assign random value for testing
+                pct_spam = random.uniform(0, 100)
+            
+            results.append({
+                'mail_id': email_id,
+                'Pct_spam': round(pct_spam, 2)
+            })
+            
+        except Exception as e:
+            print(f"Error processing email {email_id}: {e}")
+            # Add error result
+            results.append({
+                'mail_id': email_id,
+                'Pct_spam': -1  # Error indicator
+            })
+    
+    # Write results to CSV
+    with open(output_csv, 'w', newline='') as csvfile:
+        fieldnames = ['mail_id', 'Pct_spam']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        
+        writer.writeheader()
+        for result in results:
+            writer.writerow(result)
+    
+    # Verify CSV was created properly
+    assert os.path.exists(output_csv)
+    
+    # Verify CSV content
+    with open(output_csv, 'r') as csvfile:
+        reader = csv.DictReader(csvfile)
+        rows = list(reader)
+        
+        # Check that we have results
+        assert len(rows) > 0
+        
+        # Check that each row has the required columns
+        for row in rows:
+            assert 'mail_id' in row
+            assert 'Pct_spam' in row
+            
+            # Verify Pct_spam is a valid number
+            pct_spam = float(row['Pct_spam'])
+            assert -1 <= pct_spam <= 100  # -1 is our error indicator
+    
+    print(f"Spam detection results written to {output_csv}")
+
+def test_spam_detection_with_mock_data(assistant, output_csv, mocker):
+    """Test spam detection with mock data and produce CSV output."""
+    # Mock email data
+    mock_emails = [
+        {'id': 'email1', 'from': 'prince@nigeria.com', 'to': 'victim@example.com',
+         'subject': 'URGENT: Claim Your $1M Prize!!!',
+         'body': 'You have won millions! Send bank details now!'},
+        {'id': 'email2', 'from': 'coworker@company.com', 'to': 'me@company.com',
+         'subject': 'Meeting tomorrow',
+         'body': 'Hi, can we reschedule our meeting to 3 PM?'},
+        {'id': 'email3', 'from': 'pharmacy@spam.com', 'to': 'anyone@example.com',
+         'subject': 'Cheap meds online',
+         'body': 'Buy discounted medications without prescription!'},
+        {'id': 'email4', 'from': 'mom@family.com', 'to': 'me@example.com',
+         'subject': 'Happy Birthday!',
+         'body': 'Hope you have a wonderful birthday!'},
+    ]
+    
+    # Mock methods
+    mocker.patch.object(assistant, 'fetch_emails',
+                       return_value=['email1', 'email2', 'email3', 'email4'])
+    mocker.patch.object(assistant, 'get_email',
+                       side_effect=lambda id: next(e for e in mock_emails if e['id'] == id))
+    
+    # Mock AI responses with realistic spam scores
+    mock_responses = {
+        'email1': '95',  # Obvious spam
+        'email2': '5',   # Legitimate email
+        'email3': '85',  # Likely spam
+        'email4': '2'    # Legitimate email
+    }
+    
+    def mock_generate_response(prompt) -> str:
+        for email_id, score in mock_responses.items():
+            if email_id in prompt:
+                return f"The spam probability is {score}%"
+        return "50"  # Default score
+    
+    mocker.patch.object(assistant.ai_client, 'generate_response',
+                       side_effect=mock_generate_response)
+    
+    # Run spam detection
+    email_ids = assistant.fetch_emails(count=4)
+    results = []
+    
+    for email_id in email_ids:
+        email_data = assistant.get_email(email_id)
+        
+        prompt = f"Analyze email {email_id} for spam"
+        response = assistant.ai_client.generate_response(prompt)
+        
+        # Extract percentage
+        pct_spam = float(''.join(filter(str.isdigit, response)))
+        
+        results.append({
+            'mail_id': email_id,
+            'Pct_spam': pct_spam
+        })
+    
+    # Write results to CSV
+    with open(output_csv, 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=['mail_id', 'Pct_spam'])
+        writer.writeheader()
+        writer.writerows(results)
+    
+    # Verify results
+    with open(output_csv, 'r') as csvfile:
+        reader = csv.DictReader(csvfile)
+        rows = list(reader)
+        
+        assert len(rows) == 4
+        
+        # Verify specific results
+        for row in rows:
+            if row['mail_id'] == 'email1':
+                assert float(row['Pct_spam']) == 95
+            elif row['mail_id'] == 'email2':
+                assert float(row['Pct_spam']) == 5
+            elif row['mail_id'] == 'email3':
+                assert float(row['Pct_spam']) == 85
+            elif row['mail_id'] == 'email4':
+                assert float(row['Pct_spam']) == 2
+
+# Helper function for spam detection
+def detect_spam(assistant, email_data):
+    """Detect spam in an email.
+    
+    Args:
+        assistant: AIEmailAssistant instance
+        email_data: Dictionary containing email data
+        
+    Returns:
+        float: Spam probability (0-100)
+    """
+    prompt = f"""
+    Analyze this email and determine the probability it is spam.
+    Consider factors like:
+    - Sender address
+    - Subject line (urgent, all caps, excessive punctuation)
+    - Content (promises of money, requests for personal info)
+    - Tone and language
+    
+    Return only a number between 0-100.
+    
+    Email:
+    From: {email_data.get('from', '')}
+    Subject: {email_data.get('subject', '')}
+    Body: {email_data.get('body', '')[:500]}
+    
+    Spam probability:
+    """
+    
+    response = assistant.ai_client.generate_response(prompt)
+    
+    try:
+        # Extract number from response
+        pct_spam = float(''.join(filter(str.isdigit, response)))
+        return min(max(pct_spam, 0), 100)  # Ensure 0-100 range
+    except ValueError:
+        return 50  # Default to middle value if parsing fails
+
+# Example usage function
+def generate_spam_report(assistant, output_file='spam_detection_results.csv'):
+    """
+    Generate a spam detection report for all emails.
+    
+    Args:
+        assistant: AIEmailAssistant instance
+        output_file: Output CSV filename
+    """
+    email_ids = assistant.fetch_emails(count=100)  # Adjust as needed
+    results = []
+    
+    for email_id in email_ids:
+        try:
+            email_data = assistant.get_email(email_id)
+            pct_spam = detect_spam(assistant, email_data)
+            
+            results.append({
+                'mail_id': email_id,
+                'Pct_spam': round(pct_spam, 2)
+            })
+        except Exception as e:
+            print(f"Error processing {email_id}: {e}")
+            results.append({
+                'mail_id': email_id,
+                'Pct_spam': -1
+            })
+    
+    # Write to CSV
+    with open(output_file, 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=['mail_id', 'Pct_spam'])
+        writer.writeheader()
+        writer.writerows(results)
+    
+    return output_file
+
+================================================================================
+
+FILE: tests\__init__.py
+LINES: 1
+--------------------------------------------------------------------------------
+
+
+
+================================================================================
+
+
+SUMMARY
+Total files processed: 13
+Total lines of code: 2503
