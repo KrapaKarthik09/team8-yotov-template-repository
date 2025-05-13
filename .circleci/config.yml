@@ -21,11 +21,10 @@ jobs:
             uv venv
             source .venv/bin/activate
             
-            # Install the package in development mode
-            uv pip install -e ".[dev]"
-            
-            # Install test dependencies
-            uv pip install coverage pytest ruff
+            # Install packages individually to avoid project-level build issues
+            uv pip install -e my_inbox_api
+            uv pip install -e my_inbox_impl
+            uv pip install coverage ruff pytest
             
             # Run linting
             ruff check --fix --unsafe-fixes .
@@ -34,77 +33,20 @@ jobs:
             # Create directory for test results
             mkdir -p test-results
             
-            # Run unit tests
-            coverage run -m pytest tests/unit/ --junitxml=test-results/junit-unit.xml
-            
-            # Run integration tests
-            coverage run -m pytest tests/integration/ --junitxml=test-results/junit-integration.xml
-            
-            # Generate coverage reports
-            coverage report --fail-under=70
+            # Run tests and generate coverage reports
+            coverage run -m pytest my_inbox_api/tests/ --junitxml=test-results/junit.xml
+            coverage report --fail-under=70 
             coverage xml
-            coverage html
             coverage json -o test-results/coverage.json
       - store_test_results:
           path: test-results
-      - store_artifacts:
+      - store_artifacts: 
           path: htmlcov
       - store_artifacts:
           path: coverage.xml
           destination: coverage-report
-      - store_artifacts:
-          path: test-results/coverage.json
-          destination: coverage.json
-      
-  analyze-pr:
-    docker:
-      - image: cimg/python:3.12
-    parameters:
-      pr_url:
-        type: string
-        default: ""
-    steps:
-      - checkout
-      - run:
-          name: Install uv
-          command: |
-            curl -LsSf https://astral.sh/uv/install.sh | sh
-            echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> $BASH_ENV
-            source $BASH_ENV
-      - run:
-          name: Analyze PR coverage
-          command: |
-            uv venv
-            source .venv/bin/activate
-            
-            # Install the package
-            uv pip install -e .
-            
-            # Create directory for analysis results
-            mkdir -p analysis-results
-            
-            # Run PR coverage analysis
-            if [[ -n "<< parameters.pr_url >>" ]]; then
-              pr-coverage --pr-url << parameters.pr_url >> --markdown-output analysis-results/coverage-report.md
-            else
-              pr-coverage --markdown-output analysis-results/coverage-report.md
-            fi
-      - store_artifacts:
-          path: analysis-results/coverage-report.md
-          destination: pr-coverage-report.md
 
 workflows:
-  version: 2
   main:
     jobs:
       - build-and-test
-  pr-analysis:
-    jobs:
-      - analyze-pr:
-          pr_url: << pipeline.parameters.pr_url >>
-
-# Pipeline parameters for manual triggering with PR URL
-parameters:
-  pr_url:
-    type: string
-    default: ""
