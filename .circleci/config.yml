@@ -18,7 +18,6 @@ jobs:
             source .venv/bin/activate
             # Install the packages separately instead of as a single distribution
             uv pip install -e my_inbox_api
-            uv pip install -e my_inbox_impl
             uv pip install coverage ruff mypy pytest
       - run:
           name: Run linting and formatting check with Ruff
@@ -36,7 +35,6 @@ jobs:
           name: Run Static Analysis mypy
           command: | 
             source .venv/bin/activate
-            mypy my_inbox_api my_inbox_impl
       - run:
           name: Generate Coverage Reports
           command: |

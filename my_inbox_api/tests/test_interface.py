@@ -11,7 +11,7 @@ TEST_SEARCH_RESULT_COUNTS = 2
 
 class MockAttachment:
     """Mock implementation of Attachment protocol for testing."""
-    
+
     @property
     def filename(self) -> str:
         """Return test filename."""
@@ -99,10 +99,9 @@ class MockClient:
 
     def get_messages(self, limit: Optional[int] = None, folder: str = "INBOX") -> Iterator[Message]:
         """Return"""
-        
-        messages: list[Message] = [] 
+        messages: list[Message] = []
         for _ in range(5):
-            messages.append(MockMessage()) 
+            messages.append(MockMessage())
 
         if limit is not None:
             messages = messages[:limit]
@@ -145,7 +144,7 @@ def test_message_interface() -> None:
     assert isinstance(message.attachments, list)
     assert isinstance(message.is_read, bool)
 
-    # Additional list content 
+    # Additional list content
     if message.cc:
         assert all(isinstance(item, str) for item in message.cc)
     if message.bcc:
