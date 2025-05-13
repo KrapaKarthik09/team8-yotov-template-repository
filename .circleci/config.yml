@@ -14,14 +14,26 @@ jobs:
           packages:
             - ".[dev]"
       - run:
-          name: Run tests
-          command: pytest --cov
+          name: Run unit tests
+          command: pytest tests/unit
+      - run:
+          name: Run integration tests
+          command: pytest tests/integration
+      - run:
+          name: Check code coverage
+          command: |
+            coverage run -m pytest tests
+            coverage report
+            coverage html
       - run:
           name: Lint code
           command: |
             black --check pr_coverage_analyzer
             isort --check pr_coverage_analyzer
             flake8 pr_coverage_analyzer
+      - store_artifacts:
+          path: htmlcov
+          destination: coverage-report
       
   analyze-pr:
     docker:
