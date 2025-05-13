@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "team8-yotov-template-myinbox"
+version = "0.1.0"
+description = "NYU OSSPD Team 8 Email Interface and Implementation"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [
+    {name = "Team8"}
+]
+license = {file = "LICENSE"}
+dependencies = [
+    "coverage>=7.6.12",
+    "mypy>=1.15.0",
+    "nose2>=0.15.1",
+    "pytest>=8.3.4",
+    "ruff>=0.9.6",
+    "uv>=0.6.0",
+]
+
+[tool.uv.workspace]
+members = ["my_inbox_api"]
+
+[tool.uv.sources]
+my_inbox_api = { workspace = true }
+my_inbox_impl = { workspace = true }
+
+[tool.pytest.ini_options]
+testpaths = ["my_inbox_api/tests"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "W", "D", "ANN", "PLR"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "D", "ANN", "PLR"]
+ignore = [
+    "INP001",  # Ignore missing __init__.py for namespace packages
+    "D100",    # Ignore missing module-level docstrings 
+    "D203",    # Conflicting rules about blank lines before class
+    "D211",    # Conflicting rules about blank lines before class
+    "S101",    # Ignore assert usage in tests
+    "PIE790",  # Ignore unnecessary pass statement in interfaces
+    "ANN401",  # Ignore dynamically typed expressions in interfaces
+    "F401",    # Module imported but unused (needed for re-exports)
+]
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+]
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "ANN001", "ANN201"]

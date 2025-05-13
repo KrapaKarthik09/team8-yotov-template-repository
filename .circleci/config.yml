@@ -1,0 +1,56 @@
+version: 2.1
+orbs:
+  python: circleci/python@2.1
+jobs:
+  build-and-test:
+    docker:
+      - image: cimg/python:3.12
+    steps:
+      - checkout
+      - run:
+          name: Install uv
+          command: |
+            curl -LsSf https://astral.sh/uv/install.sh | sh
+      - run:
+          name: Create virtual environment and install packages
+          command: |
+            uv venv
+            source .venv/bin/activate
+            # Install the packages separately instead of as a single distribution
+            uv pip install -e my_inbox_api
+            uv pip install coverage ruff mypy pytest
+      - run:
+          name: Run linting and formatting check with Ruff
+          command: |
+            source .venv/bin/activate
+            ruff check --fix .
+            ruff check --fix --unsafe-fixes .
+            ruff check .
+      - run:
+          name: Dir for Tests
+          command: | 
+            source .venv/bin/activate
+            mkdir -p test-results
+      - run:
+          name: Run Static Analysis mypy
+          command: | 
+            source .venv/bin/activate
+      - run:
+          name: Generate Coverage Reports
+          command: |
+            source .venv/bin/activate
+            coverage run -m pytest my_inbox_api/tests/ --junitxml=test-results/junit.xml
+            coverage report --fail-under=90 
+            coverage xml
+            coverage json -o test-results/coverage.json
+      - store_test_results:
+          path: test-results
+      - store_artifacts: 
+          path: htmlcov
+      - store_artifacts:
+          path: coverage.xml
+          destination: coverage-report
+workflows:
+  main:
+    jobs:
+      - build-and-test
