@@ -14,16 +14,8 @@ A tool to analyze code coverage changes in Pull Requests by comparing coverage b
 
 ## Installation
 
-### From PyPI
-
 ```bash
-pip install pr-coverage-analyzer
-```
-
-### From Source
-
-```bash
-git clone https://github.com/username/pr-coverage-analyzer.git
+git clone https://github.com/KrapaKarthik09/team8-yotov-template-repository.git
 cd pr-coverage-analyzer
 pip install -e .
 ```
@@ -123,7 +115,7 @@ Add the following to your CircleCI configuration:
 version: 2.1
 
 orbs:
-  python: circleci/python@2.1a
+  python: circleci/python@2.1
 
 jobs:
   analyze-pr:
@@ -135,10 +127,10 @@ jobs:
         default: ""
     steps:
       - checkout
-      - python/install-packages:
-          pkg-manager: pip
-          packages:
-            - "pr-coverage-analyzer"
+      - run:
+          name: Install PR Coverage Analyzer
+          command: |
+            pip install -e .
       - run:
           name: Analyze PR Coverage
           command: |
