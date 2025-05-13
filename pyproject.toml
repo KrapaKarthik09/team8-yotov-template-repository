@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pr_coverage_analyzer"
+version = "0.1.0"
+description = "Tool to analyze code coverage changes in Pull Requests"
+readme = "README.md"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "coverage>=6.0.0",
+    "pytest>=7.0.0",
+    "pyyaml>=6.0",
+    "requests>=2.28.0",
+    "pygithub>=1.55",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "isort",
+    "flake8",
+    "pytest-cov",
+]
+
+[project.scripts]
+pr-coverage = "pr_coverage_analyzer.cli:main"
+
+[tool.setuptools]
+packages = ["pr_coverage_analyzer"]
+
+[tool.black]
+line-length = 88
+target-version = ["py38"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.coverage.run]
+source = ["pr_coverage_analyzer"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
