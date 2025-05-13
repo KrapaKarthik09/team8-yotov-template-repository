@@ -4,6 +4,7 @@ import logging
 import os
 import re
 import tempfile
+import subprocess
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
